@@ -101,7 +101,7 @@ The iOS version will be available on the App Store soon. For now, you can build 
 3. Enter your Groq API key
 4. Grant camera and photo library permissions when prompted
 
-## 🚀 Usage
+## Usage
 
 ### macOS
 1. Copy an image (screenshot, photo, etc.) to your clipboard
@@ -149,7 +149,7 @@ For official releases, the macOS app is code-signed and notarized to prevent "da
 
 **For contributors**: Pull requests build unsigned versions for testing. Only tagged releases are signed and notarized.
 
-## 📊 API Limits
+## API Limits
 
 ### Groq
 - **Image Size**: 20MB max per request
@@ -157,7 +157,7 @@ For official releases, the macOS app is code-signed and notarized to prevent "da
 - **Base64**: 4MB max for base64 encoded images
 - **Rate Limits**: Generous free tier
 
-## 🤝 Contributing
+## Contributing
 
 Feel free to submit issues and pull requests! When contributing:
 
@@ -166,6 +166,6 @@ Feel free to submit issues and pull requests! When contributing:
 - Test on multiple devices and screen sizes
 - Consider both macOS and iOS impacts for shared code changes
 
-## 📄 License
+## License
 
 MIT License - see LICENSE file for details.
