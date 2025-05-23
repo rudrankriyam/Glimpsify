@@ -171,7 +171,7 @@ struct SettingsView: View {
 
       return httpResponse.statusCode == 200
     } catch {
-      print("Validation error: \(error)")
+      // Note: Validation failed - error details not logged for security
       return false
     }
   }

@@ -97,7 +97,9 @@ class KeychainManager {
   private init() {}
 
   func saveAPIKey(_ key: String, for provider: APIProvider) {
-    let data = key.data(using: .utf8)!
+    guard let data = key.data(using: .utf8) else {
+      return // Failed to encode key
+    }
 
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
@@ -144,7 +146,9 @@ class KeychainManager {
 
   // Additional methods for direct key access (used by SettingsView)
   func save(key: String, value: String) -> Bool {
-    let data = value.data(using: .utf8)!
+    guard let data = value.data(using: .utf8) else {
+      return false // Failed to encode value
+    }
 
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,

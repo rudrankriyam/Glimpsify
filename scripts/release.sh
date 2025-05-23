@@ -15,6 +15,12 @@ fi
 VERSION=$1
 TAG="v$VERSION"
 
+# Validate version format (semantic versioning)
+if ! [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "Error: Invalid version format. Use semantic versioning (e.g., 1.0.0)"
+    exit 1
+fi
+
 echo "Creating release for version $VERSION..."
 
 # Check if we're on main branch
@@ -32,6 +38,12 @@ fi
 if [ -n "$(git status --porcelain)" ]; then
     echo "Error: Working directory is not clean. Please commit or stash your changes."
     git status --short
+    exit 1
+fi
+
+# Check if tag already exists
+if git rev-parse "$TAG" >/dev/null 2>&1; then
+    echo "Error: Tag $TAG already exists"
     exit 1
 fi
 
