@@ -34,6 +34,8 @@ A macOS menu bar app that generates descriptive alt text for images!
 3. Open the DMG and drag Glimpsify.app to your Applications folder
 4. Launch from Applications or Spotlight
 
+**Note**: Official releases are code-signed and notarized by Apple for security.
+
 ### Build from Source
 
 1. Clone the repository
@@ -123,6 +125,17 @@ The GitHub Actions workflow will automatically:
 - Create a DMG file
 - Upload artifacts
 - Create a GitHub release (for tags)
+
+### Code Signing and Notarization
+
+For official releases, the app is code-signed and notarized to prevent "damaged app" warnings on macOS.
+
+**For maintainers**: See [NOTARIZATION_SETUP.md](NOTARIZATION_SETUP.md) for detailed instructions on setting up:
+- Apple Developer certificates
+- GitHub repository secrets
+- Notarization workflow
+
+**For contributors**: Pull requests build unsigned versions for testing. Only tagged releases are signed and notarized.
 
 ## API Limits
 
