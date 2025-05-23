@@ -33,6 +33,12 @@ class CameraManager: NSObject {
     return getPreviewLayer()
   }
 
+  // Check if flash is available on current camera
+  var isFlashAvailable: Bool {
+    guard let currentDevice = currentCameraInput?.device else { return false }
+    return currentDevice.hasFlash
+  }
+
   override init() {
     super.init()
     authorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
@@ -132,6 +138,19 @@ class CameraManager: NSObject {
 
   func setFlashMode(_ flashMode: AVCaptureDevice.FlashMode) {
     currentFlashMode = flashMode
+
+    // Configure the actual camera device flash mode
+    guard let currentDevice = currentCameraInput?.device else { return }
+
+    do {
+      try currentDevice.lockForConfiguration()
+      if currentDevice.hasFlash {
+        // Flash mode will be set when capturing photo via AVCapturePhotoSettings
+      }
+      currentDevice.unlockForConfiguration()
+    } catch {
+      print("Error configuring flash: \(error)")
+    }
   }
 
   func flipCamera() {
@@ -143,6 +162,7 @@ class CameraManager: NSObject {
       let newCamera = AVCaptureDevice.default(
         .builtInWideAngleCamera, for: .video, position: newPosition)
     else {
+      print("Camera not available for position: \(newPosition)")
       return
     }
 
@@ -151,19 +171,22 @@ class CameraManager: NSObject {
 
       session.beginConfiguration()
 
+      // Remove the current input
       if let currentInput = currentCameraInput {
         session.removeInput(currentInput)
       }
 
+      // Add the new input
       if session.canAddInput(newInput) {
         session.addInput(newInput)
         currentCameraInput = newInput
         currentCameraPosition = newPosition
       } else {
         // Re-add the old input if new one fails
-        if let currentInput = currentCameraInput {
-          session.addInput(currentInput)
+        if let oldInput = currentCameraInput, session.canAddInput(oldInput) {
+          session.addInput(oldInput)
         }
+        print("Cannot add new camera input")
       }
 
       session.commitConfiguration()
@@ -179,7 +202,16 @@ class CameraManager: NSObject {
     }
 
     let settings = AVCapturePhotoSettings()
-    settings.flashMode = currentFlashMode
+
+    // Only set flash mode if the photoOutput supports it
+    if let currentDevice = currentCameraInput?.device,
+      currentDevice.hasFlash,
+      photoOutput.supportedFlashModes.contains(currentFlashMode)
+    {
+      settings.flashMode = currentFlashMode
+    } else {
+      settings.flashMode = .off
+    }
 
     photoOutput.capturePhoto(with: settings, delegate: self)
   }
@@ -193,7 +225,16 @@ class CameraManager: NSObject {
     }
 
     let settings = AVCapturePhotoSettings()
-    settings.flashMode = currentFlashMode
+
+    // Only set flash mode if the photoOutput supports it
+    if let currentDevice = currentCameraInput?.device,
+      currentDevice.hasFlash,
+      photoOutput.supportedFlashModes.contains(currentFlashMode)
+    {
+      settings.flashMode = currentFlashMode
+    } else {
+      settings.flashMode = .off
+    }
 
     // Store completion handler for delegate callback
     self.captureCompletion = completion

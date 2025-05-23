@@ -20,7 +20,7 @@ struct CameraView: View {
   var body: some View {
     GeometryReader { geometry in
       ZStack {
-        // Black background covering everything
+        // Black background
         Color.black
           .ignoresSafeArea(.all)
 
@@ -28,19 +28,20 @@ struct CameraView: View {
         cameraPreview
           .ignoresSafeArea(.all)
 
-        // Camera controls overlay
+        // Minimalistic overlay controls
         VStack {
-          // Top controls
+          // Top minimal controls
           topControls
+            .padding(.horizontal, 24)
+            .padding(.top, 16)
 
           Spacer()
 
-          // Bottom controls
+          // Bottom capture controls
           bottomControls
+            .padding(.horizontal, 24)
+            .padding(.bottom, max(34, geometry.safeAreaInsets.bottom + 20))
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 16)
-        .padding(.bottom, max(16, geometry.safeAreaInsets.bottom + 16))
       }
     }
     .background(.black)
@@ -61,165 +62,114 @@ struct CameraView: View {
   }
 
   private var cameraPreview: some View {
-    GeometryReader { geometry in
-      ZStack {
-        // Ensure black background
-        Color.black
-          .ignoresSafeArea(.all)
-
-        CameraPreviewView(cameraManager: cameraManager)
-
-        // Subtle viewfinder overlay
-        VStack {
-          Spacer()
-
-          RoundedRectangle(cornerRadius: 16)
-            .stroke(.white.opacity(0.3), lineWidth: 1)
-            .frame(width: min(280, geometry.size.width - 60), height: 180)
-            .overlay(
-              VStack {
-                HStack {
-                  Rectangle()
-                    .fill(.white.opacity(0.6))
-                    .frame(width: 16, height: 1)
-                  Spacer()
-                  Rectangle()
-                    .fill(.white.opacity(0.6))
-                    .frame(width: 16, height: 1)
-                }
-                Spacer()
-                HStack {
-                  Rectangle()
-                    .fill(.white.opacity(0.6))
-                    .frame(width: 16, height: 1)
-                  Spacer()
-                  Rectangle()
-                    .fill(.white.opacity(0.6))
-                    .frame(width: 16, height: 1)
-                }
-              }
-              .padding(6)
-            )
-
-          Text("Position subject in frame")
-            .font(.system(size: 14, weight: .medium))
-            .foregroundStyle(.white.opacity(0.8))
-            .padding(.top, 12)
-
-          Spacer()
-        }
-      }
-    }
+    CameraPreviewView(cameraManager: cameraManager)
+      .overlay(
+        // Subtle center focus indicator
+        RoundedRectangle(cornerRadius: 8)
+          .stroke(.white.opacity(0.4), lineWidth: 1)
+          .frame(width: 200, height: 150)
+          .animation(.easeInOut(duration: 0.3), value: isCapturing)
+          .scaleEffect(isCapturing ? 1.1 : 1.0)
+      )
   }
 
   private var topControls: some View {
     HStack {
-      // Flash control
-      Button(action: toggleFlash) {
-        Image(systemName: flashIconName)
-          .font(.system(size: 18, weight: .medium))
-          .foregroundStyle(flashMode == .on ? .yellow : .white)
-          .frame(width: 40, height: 40)
-          .background(.black.opacity(0.3), in: Circle())
-          .overlay(
-            Circle()
-              .stroke(.white.opacity(0.2), lineWidth: 0.5)
-          )
+      // Flash control - more prominent when on, only show if available
+      if cameraManager.isFlashAvailable {
+        Button(action: toggleFlash) {
+          Image(systemName: flashIconName)
+            .font(.system(size: 20, weight: .medium))
+            .foregroundStyle(flashMode == .on ? .yellow : (flashMode == .auto ? .orange : .white))
+            .frame(width: 44, height: 44)
+            .background(
+              (flashMode != .off ? .white.opacity(0.2) : .clear),
+              in: Circle()
+            )
+            .overlay(
+              Circle()
+                .stroke(.white.opacity(flashMode != .off ? 0.4 : 0.2), lineWidth: 1)
+            )
+        }
+      } else {
+        // Spacer when flash is not available
+        Spacer()
+          .frame(width: 44, height: 44)
       }
 
       Spacer()
 
-      // Camera status
-      HStack(spacing: 6) {
-        Circle()
-          .fill(cameraManager.isAuthorized ? .green : .red)
-          .frame(width: 6, height: 6)
-
-        Text(cameraManager.isAuthorized ? "Ready" : "No Access")
-          .font(.system(size: 12, weight: .medium))
-          .foregroundStyle(.white)
-      }
-      .padding(.horizontal, 10)
-      .padding(.vertical, 6)
-      .background(.black.opacity(0.4), in: Capsule())
-
-      Spacer()
-
-      // Camera flip
+      // Camera flip button
       Button(action: {
-        cameraManager.flipCamera()
+        withAnimation(.easeInOut(duration: 0.3)) {
+          cameraManager.flipCamera()
+
+          // Turn off flash if switching to front camera (typically no flash)
+          if !cameraManager.isFlashAvailable && flashMode != .off {
+            flashMode = .off
+            cameraManager.setFlashMode(flashMode)
+          }
+        }
       }) {
         Image(systemName: "camera.rotate")
-          .font(.system(size: 18, weight: .medium))
+          .font(.system(size: 20, weight: .medium))
           .foregroundStyle(.white)
-          .frame(width: 40, height: 40)
-          .background(.black.opacity(0.3), in: Circle())
+          .frame(width: 44, height: 44)
+          .background(.clear)
           .overlay(
             Circle()
-              .stroke(.white.opacity(0.2), lineWidth: 0.5)
+              .stroke(.white.opacity(0.2), lineWidth: 1)
           )
       }
     }
   }
 
   private var bottomControls: some View {
-    VStack(spacing: 20) {
-      // Instruction text
-      Text("Tap to capture and analyze")
-        .font(.system(size: 15, weight: .medium))
-        .foregroundStyle(.white.opacity(0.9))
+    HStack(alignment: .center, spacing: 0) {
+      // Photo library button
+      Button(action: {
+        showingImagePicker = true
+      }) {
+        Image(systemName: "photo")
+          .font(.system(size: 24, weight: .medium))
+          .foregroundStyle(.white)
+          .frame(width: 50, height: 50)
+      }
+      .frame(maxWidth: .infinity)
 
-      HStack(spacing: 50) {
-        // Photo library
-        Button(action: {
-          showingImagePicker = true
-        }) {
-          RoundedRectangle(cornerRadius: 8)
-            .fill(.white.opacity(0.2))
-            .frame(width: 50, height: 50)
-            .overlay(
-              Image(systemName: "photo.on.rectangle")
-                .font(.system(size: 20, weight: .medium))
-                .foregroundStyle(.white)
-            )
-        }
+      // Main capture button - Apple style
+      Button(action: capturePhoto) {
+        ZStack {
+          Circle()
+            .fill(.white)
+            .frame(width: 72, height: 72)
 
-        // Capture button - Apple style
-        Button(action: capturePhoto) {
-          ZStack {
-            Circle()
-              .fill(.white)
-              .frame(width: 70, height: 70)
+          Circle()
+            .stroke(.white.opacity(0.3), lineWidth: 2)
+            .frame(width: 88, height: 88)
 
-            Circle()
-              .stroke(.white, lineWidth: 3)
-              .frame(width: 84, height: 84)
-
-            if isCapturing {
-              ProgressView()
-                .scaleEffect(1.2)
-                .tint(.black)
-            }
+          if isCapturing {
+            ProgressView()
+              .scaleEffect(1.2)
+              .tint(.black)
           }
         }
-        .disabled(isCapturing || !cameraManager.isAuthorized)
-        .scaleEffect(isCapturing ? 0.95 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isCapturing)
-
-        // Info/settings
-        Button(action: {
-          // Show info
-        }) {
-          RoundedRectangle(cornerRadius: 8)
-            .fill(.white.opacity(0.2))
-            .frame(width: 50, height: 50)
-            .overlay(
-              Image(systemName: "info")
-                .font(.system(size: 20, weight: .medium))
-                .foregroundStyle(.white)
-            )
-        }
       }
+      .disabled(isCapturing || !cameraManager.isAuthorized)
+      .scaleEffect(isCapturing ? 0.9 : 1.0)
+      .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isCapturing)
+      .frame(maxWidth: .infinity)
+
+      // Settings/Info button
+      Button(action: {
+        // TODO: Show camera info or settings
+      }) {
+        Image(systemName: "info.circle")
+          .font(.system(size: 24, weight: .medium))
+          .foregroundStyle(.white.opacity(0.7))
+          .frame(width: 50, height: 50)
+      }
+      .frame(maxWidth: .infinity)
     }
   }
 
@@ -233,11 +183,13 @@ struct CameraView: View {
   }
 
   private func toggleFlash() {
-    switch flashMode {
-    case .off: flashMode = .on
-    case .on: flashMode = .auto
-    case .auto: flashMode = .off
-    @unknown default: flashMode = .off
+    withAnimation(.easeInOut(duration: 0.2)) {
+      switch flashMode {
+      case .off: flashMode = .auto
+      case .auto: flashMode = .on
+      case .on: flashMode = .off
+      @unknown default: flashMode = .off
+      }
     }
     cameraManager.setFlashMode(flashMode)
   }
@@ -246,6 +198,10 @@ struct CameraView: View {
     guard cameraManager.isAuthorized else { return }
 
     isCapturing = true
+
+    // Add haptic feedback
+    let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+    impactFeedback.impactOccurred()
 
     cameraManager.capturePhoto { image in
       DispatchQueue.main.async {
