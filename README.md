@@ -1,16 +1,29 @@
 # Glimpsify
 
-A macOS menu bar app that generates descriptive alt text for images!
+A cross-platform app that generates descriptive alt text for images using AI! Available for both macOS and iOS.
 
 ## Features
 
-- Automatic clipboard monitoring - Detects when you copy images
-- Groq AI integration - Ultra-fast image analysis with Llama 4 Scout
-- Twitter-optimized - Generates concise descriptions (max 1000 characters)
-- Secure API key storage - Keys stored safely in macOS Keychain
-- API key validation - Tests keys when saving to ensure they work
-- One-click copy - Copy generated alt text to clipboard
-- Customizable settings - Configure generation options
+### macOS (Menu Bar App)
+- **Automatic clipboard monitoring** - Detects when you copy images
+- **One-click generation** - Generate alt text from the menu bar
+- **System integration** - Works seamlessly with screenshots and copied images
+- **Customizable settings** - Configure generation options
+
+### iOS (Native App)
+- **Camera integration** - Take photos directly in the app with professional controls
+- **Photo library access** - Browse and select images with elegant grid layout
+- **Clipboard monitoring** - Automatically detect images copied to clipboard
+- **Beautiful design** - Built with Apple's design principles and guidelines
+- **Tab-based navigation** - Intuitive interface across Camera, Photos, Clipboard, and Settings
+
+### Shared Features
+- **Groq AI integration** - Ultra-fast image analysis with Llama 4 Scout
+- **Twitter-optimized** - Generates concise descriptions (max 1000 characters)
+- **Secure API key storage** - Keys stored safely in Keychain (macOS) or iOS Keychain
+- **API key validation** - Tests keys when saving to ensure they work
+- **One-click copy** - Copy generated alt text to clipboard
+- **Privacy-first** - All processing happens locally, only API calls for generation
 
 ## AI Model
 
@@ -22,12 +35,18 @@ A macOS menu bar app that generates descriptive alt text for images!
 
 ## Requirements
 
+### macOS
 - macOS 14.0+
+- Groq API key (free at console.groq.com)
+
+### iOS
+- iOS 18.0+
+- iPhone or iPad
 - Groq API key (free at console.groq.com)
 
 ## Installation
 
-### Download from Releases
+### Download from Releases (macOS)
 
 1. Go to the [Releases page](https://github.com/rudrankriyam/Glimpsify/releases)
 2. Download the latest `Glimpsify.dmg` file
@@ -35,6 +54,10 @@ A macOS menu bar app that generates descriptive alt text for images!
 4. Launch from Applications or Spotlight
 
 **Note**: Official releases are code-signed and notarized by Apple for security.
+
+### iOS App Store (Coming Soon)
+
+The iOS version will be available on the App Store soon. For now, you can build from source.
 
 ### Build from Source
 
@@ -49,7 +72,11 @@ A macOS menu bar app that generates descriptive alt text for images!
    open Glimpsify.xcodeproj
    ```
 
-3. Build and run (⌘+R)
+3. Select your target platform:
+   - **For macOS**: Select "Glimpsify" scheme
+   - **For iOS**: Select "Glimpsify iOS" scheme
+
+4. Build and run (⌘+R)
 
 ## Setup
 
@@ -61,51 +88,36 @@ A macOS menu bar app that generates descriptive alt text for images!
 
 ### Configure the App
 
+#### macOS
 1. Launch Glimpsify
 2. Click the Glimpsify menu bar icon
 3. Go to Settings
 4. Enter your API key and click "Save"
 5. The app will validate your key automatically
 
-## Usage
+#### iOS
+1. Launch the app
+2. Go to Settings tab
+3. Enter your Groq API key
+4. Grant camera and photo library permissions when prompted
 
+## 🚀 Usage
+
+### macOS
 1. Copy an image (screenshot, photo, etc.) to your clipboard
 2. Click the Glimpsify icon in your menu bar
 3. Click "Generate Alt Text" to create a description
 4. Copy the result to use on Twitter or anywhere else
 
-## Keyboard Shortcuts
-
-- **⌘+Shift+4** - Take screenshot (automatically copied to clipboard)
-- **⌘+C** - Copy image from any app
-
-## Settings
-
-Access settings through the menu bar app to configure:
-
-- **API Key Management**: Securely store and validate your Groq API key
-- **Maximum Character Count**: Customize output length
-- **Auto-generation**: Enable automatic alt text generation
-
-## Development
-
-Built with:
-
-- SwiftUI for modern macOS UI
-- `@Observable` for state management
-- MenuBarExtra for menu bar integration
-- Security framework for Keychain integration
-- Groq API for AI vision processing
+### iOS
+1. **Camera**: Take a new photo and generate alt text instantly
+2. **Photos**: Select an image from your photo library
+3. **Clipboard**: Copy an image from any app and switch to Glimpsify
+4. **Generated text**: Copy or share the alt text description
 
 ## GitHub Actions
 
 This project includes automated building and releasing:
-
-### Automatic Builds
-
-- **On every push to main**: Builds the app and uploads artifacts
-- **On pull requests**: Validates that the app builds successfully
-- **On tags**: Creates a release with DMG file
 
 ### Creating a Release
 
@@ -121,14 +133,14 @@ This project includes automated building and releasing:
    ```
 
 The GitHub Actions workflow will automatically:
-- Build the app in Release configuration
-- Create a DMG file
-- Upload artifacts
+- Build both macOS and iOS apps in Release configuration
+- Create a DMG file for macOS
+- Upload artifacts for both platforms
 - Create a GitHub release (for tags)
 
 ### Code Signing and Notarization
 
-For official releases, the app is code-signed and notarized to prevent "damaged app" warnings on macOS.
+For official releases, the macOS app is code-signed and notarized to prevent "damaged app" warnings.
 
 **For maintainers**: See [NOTARIZATION_SETUP.md](NOTARIZATION_SETUP.md) for detailed instructions on setting up:
 - Apple Developer certificates
@@ -137,7 +149,7 @@ For official releases, the app is code-signed and notarized to prevent "damaged 
 
 **For contributors**: Pull requests build unsigned versions for testing. Only tagged releases are signed and notarized.
 
-## API Limits
+## 📊 API Limits
 
 ### Groq
 - **Image Size**: 20MB max per request
@@ -145,10 +157,15 @@ For official releases, the app is code-signed and notarized to prevent "damaged 
 - **Base64**: 4MB max for base64 encoded images
 - **Rate Limits**: Generous free tier
 
-## Contributing
+## 🤝 Contributing
 
-Feel free to submit issues and pull requests!
+Feel free to submit issues and pull requests! When contributing:
 
-## License
+- Follow Apple's Human Interface Guidelines for UI changes
+- Ensure accessibility compliance
+- Test on multiple devices and screen sizes
+- Consider both macOS and iOS impacts for shared code changes
+
+## 📄 License
 
 MIT License - see LICENSE file for details.
