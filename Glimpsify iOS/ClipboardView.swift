@@ -124,58 +124,9 @@ struct ClipboardView: View {
           .multilineTextAlignment(.center)
           .lineLimit(3)
       }
-
-      // Quick actions with Apple styling
-      VStack(spacing: 12) {
-        Text("Quick Actions")
-          .font(.system(size: 18, weight: .semibold))
-          .foregroundStyle(.primary)
-          .frame(maxWidth: .infinity, alignment: .leading)
-
-        HStack(spacing: 12) {
-          quickActionCard(
-            icon: "camera",
-            title: "Take Photo",
-            color: .blue
-          ) {
-            // Camera action
-          }
-
-          quickActionCard(
-            icon: "photo.on.rectangle",
-            title: "Choose Photo",
-            color: .green
-          ) {
-            // Photo library action
-          }
-        }
-      }
     }
     .padding(24)
     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-  }
-
-  private func quickActionCard(
-    icon: String,
-    title: String,
-    color: Color,
-    action: @escaping () -> Void
-  ) -> some View {
-    Button(action: action) {
-      VStack(spacing: 12) {
-        Image(systemName: icon)
-          .font(.system(size: 24, weight: .regular))
-          .foregroundStyle(color)
-
-        Text(title)
-          .font(.system(size: 15, weight: .medium))
-          .foregroundStyle(.primary)
-      }
-      .frame(maxWidth: .infinity)
-      .frame(height: 80)
-      .background(.quaternary, in: RoundedRectangle(cornerRadius: 12))
-    }
-    .buttonStyle(.plain)
   }
 
   private func resultCard(_ altText: String) -> some View {

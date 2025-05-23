@@ -11,18 +11,19 @@ struct ContentView: View {
   @Environment(ClipboardManager.self) private var clipboardManager
   @Environment(AltTextGenerator.self) private var altTextGenerator
   @State private var selectedTab: Tab = .camera
-  @State private var showingSettings = false
 
   enum Tab: String, CaseIterable {
     case camera = "Camera"
     case photos = "Photos"
     case clipboard = "Clipboard"
+    case settings = "Settings"
 
     var icon: String {
       switch self {
       case .camera: return "camera"
       case .photos: return "photo.on.rectangle.angled"
       case .clipboard: return "doc.on.clipboard"
+      case .settings: return "gear"
       }
     }
 
@@ -31,6 +32,7 @@ struct ContentView: View {
       case .camera: return "camera.fill"
       case .photos: return "photo.fill.on.rectangle.fill"
       case .clipboard: return "doc.on.clipboard.fill"
+      case .settings: return "gear.fill"
       }
     }
   }
@@ -55,9 +57,6 @@ struct ContentView: View {
       UITabBar.appearance().standardAppearance = appearance
       UITabBar.appearance().scrollEdgeAppearance = appearance
     }
-    .sheet(isPresented: $showingSettings) {
-      SettingsView()
-    }
   }
 
   @ViewBuilder
@@ -67,15 +66,10 @@ struct ContentView: View {
       CameraView()
     case .photos:
       PhotosView()
-        .toolbar {
-          ToolbarItem(placement: .navigationBarTrailing) {
-            Button(action: { showingSettings = true }) {
-              Image(systemName: "gear")
-            }
-          }
-        }
     case .clipboard:
       ClipboardView()
+    case .settings:
+      SettingsView()
     }
   }
 }

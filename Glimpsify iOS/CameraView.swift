@@ -12,7 +12,6 @@ import UIKit
 struct CameraView: View {
   @Environment(CameraManager.self) private var cameraManager
   @Environment(AltTextGenerator.self) private var altTextGenerator
-  @State private var showingImagePicker = false
   @State private var capturedImage: UIImage?
   @State private var showingResult = false
   @State private var flashMode: AVCaptureDevice.FlashMode = .off
@@ -53,9 +52,6 @@ struct CameraView: View {
     }
     .onDisappear {
       cameraManager.stopSession()
-    }
-    .sheet(isPresented: $showingImagePicker) {
-      ImagePicker(image: $capturedImage)
     }
     .sheet(isPresented: $showingResult) {
       if let image = capturedImage {
@@ -140,16 +136,9 @@ struct CameraView: View {
 
   private var bottomControls: some View {
     HStack(alignment: .center, spacing: 0) {
-      // Photo library button
-      Button(action: {
-        showingImagePicker = true
-      }) {
-        Image(systemName: "photo")
-          .font(.system(size: 24, weight: .medium))
-          .foregroundStyle(.white)
-          .frame(width: 50, height: 50)
-      }
-      .frame(maxWidth: .infinity)
+      // Left spacer for balance
+      Spacer()
+        .frame(maxWidth: .infinity)
 
       // Main capture button - Apple style
       Button(action: capturePhoto) {
@@ -174,16 +163,9 @@ struct CameraView: View {
       .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isCapturing)
       .frame(maxWidth: .infinity)
 
-      // Settings/Info button
-      Button(action: {
-        // TODO: Show camera info or settings
-      }) {
-        Image(systemName: "info.circle")
-          .font(.system(size: 24, weight: .medium))
-          .foregroundStyle(.white.opacity(0.7))
-          .frame(width: 50, height: 50)
-      }
-      .frame(maxWidth: .infinity)
+      // Right spacer for balance
+      Spacer()
+        .frame(maxWidth: .infinity)
     }
   }
 
@@ -427,48 +409,6 @@ struct CaptureResultView: View {
       let window = windowScene.windows.first
     {
       window.rootViewController?.present(activityController, animated: true)
-    }
-  }
-}
-
-// MARK: - Image Picker
-struct ImagePicker: UIViewControllerRepresentable {
-  @Binding var image: UIImage?
-  @Environment(\.dismiss) private var dismiss
-
-  func makeUIViewController(context: Context) -> UIImagePickerController {
-    let picker = UIImagePickerController()
-    picker.delegate = context.coordinator
-    picker.sourceType = .photoLibrary
-    picker.allowsEditing = false
-    return picker
-  }
-
-  func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-
-  func makeCoordinator() -> Coordinator {
-    Coordinator(self)
-  }
-
-  class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    let parent: ImagePicker
-
-    init(_ parent: ImagePicker) {
-      self.parent = parent
-    }
-
-    func imagePickerController(
-      _ picker: UIImagePickerController,
-      didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
-    ) {
-      if let image = info[.originalImage] as? UIImage {
-        parent.image = image
-      }
-      parent.dismiss()
-    }
-
-    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-      parent.dismiss()
     }
   }
 }
