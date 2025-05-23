@@ -83,6 +83,7 @@
 				0A992F822DE09547008DAAE9 /* Sources */,
 				0A992F832DE09547008DAAE9 /* Frameworks */,
 				0A992F842DE09547008DAAE9 /* Resources */,
+				0A99303B2DE0AD18008DAAE9 /* SwiftLint */,
 			);
 			buildRules = (
 			);
@@ -174,6 +175,29 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		0A99303B2DE0AD18008DAAE9 /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.swiftlint.yml",
+			);
+			name = SwiftLint;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"  $(TEMP_DIR)/swiftlint.log",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/bash\n\n# Only run SwiftLint during DEBUG builds to avoid slowing down release builds\nif [ \"${CONFIGURATION}\" = \"Debug\" ]; then\n    # Check if SwiftLint is installed\n    if which swiftlint >/dev/null; then\n        echo \"SwiftLint found. Running linter...\"\n        swiftlint lint --reporter xcode\n        \n        # Create output file in a writable location\n        echo \"SwiftLint completed at $(date)\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n    else\n        echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\n        echo \"You can install SwiftLint using Homebrew: brew install swiftlint\"\n        \n        # Create empty output file\n        touch \"${SCRIPT_OUTPUT_FILE_0}\"\n    fi\nelse\n    echo \"Skipping SwiftLint for ${CONFIGURATION} build\"\n    \n    # Create output file even when skipped\n    echo \"SwiftLint skipped for ${CONFIGURATION} at $(date)\" > \"${SCRIPT_OUTPUT_FILE_0}\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0A992F822DE09547008DAAE9 /* Sources */ = {

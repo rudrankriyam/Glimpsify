@@ -406,8 +406,7 @@ struct CaptureResultView: View {
     )
 
     if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-      let window = windowScene.windows.first
-    {
+      let window = windowScene.windows.first {
       window.rootViewController?.present(activityController, animated: true)
     }
   }

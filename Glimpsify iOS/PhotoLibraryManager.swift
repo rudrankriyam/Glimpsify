@@ -105,9 +105,8 @@ class PhotoLibraryManager {
   }
 
   func getImage(for asset: PHAsset, targetSize: CGSize = CGSize(width: 300, height: 300)) async
-    -> UIImage?
-  {
-    return await withCheckedContinuation { continuation in
+    -> UIImage? {
+    await withCheckedContinuation { continuation in
       let manager = PHImageManager.default()
       let options = PHImageRequestOptions()
       options.deliveryMode = .highQualityFormat
@@ -126,7 +125,7 @@ class PhotoLibraryManager {
   }
 
   func getFullResolutionImage(for asset: PHAsset) async -> UIImage? {
-    return await withCheckedContinuation { continuation in
+    await withCheckedContinuation { continuation in
       let manager = PHImageManager.default()
       let options = PHImageRequestOptions()
       options.deliveryMode = .highQualityFormat

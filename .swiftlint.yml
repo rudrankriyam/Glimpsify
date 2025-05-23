@@ -1,0 +1,196 @@
+# SwiftLint Configuration for Glimpsify
+# High-quality rules for modern SwiftUI development
+
+# Paths to include/exclude
+included:
+  - Glimpsify
+  - Glimpsify iOS
+
+excluded:
+  - Carthage
+  - Pods
+  - .build
+  - build
+  - DerivedData
+
+# Basic configuration
+line_length:
+  warning: 120
+  error: 150
+  ignores_function_declarations: true
+  ignores_comments: true
+  ignores_urls: true
+
+type_body_length: 300
+
+function_body_length:
+  warning: 60
+  error: 100
+
+file_length: 500
+function_parameter_count: 5
+
+type_name:
+  min_length: 3
+  max_length: 40
+  excluded:
+    - "URL"
+    - "ID"
+    - "iOS"
+    - "API"
+    - "UI"
+
+identifier_name:
+  min_length: 2
+  max_length: 60
+  excluded:
+    - "id"
+    - "url"
+    - "iOS"
+    - "API"
+    - "UI"
+
+# Enabled rules (comprehensive set for high quality)
+opt_in_rules:
+  - array_init
+  - attributes
+  - closure_end_indentation
+  - closure_spacing
+  - collection_alignment
+  - conditional_returns_on_newline
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - contains_over_range_nil_comparison
+  - convenience_type
+  - discouraged_object_literal
+  - empty_collection_literal
+  - empty_count
+  - empty_string
+  - empty_xctest_method
+  - enum_case_associated_values_count
+  - explicit_init
+  - fallthrough
+  - fatal_error_message
+  - file_header
+  - file_name
+  - first_where
+  - flatmap_over_map_reduce
+  - force_unwrapping
+  - function_default_parameter_at_end
+  - identical_operands
+  - implicit_return
+  - joined_default_parameter
+  - last_where
+  - legacy_random
+  - literal_expression_end_indentation
+  - lower_acl_than_parent
+  - modifier_order
+  - multiline_arguments
+  - multiline_function_chains
+  - multiline_literal_brackets
+  - multiline_parameters
+  - multiline_parameters_brackets
+  - nimble_operator
+  - nslocalizedstring_key
+  - number_separator
+  - object_literal
+  - operator_usage_whitespace
+  - overridden_super_call
+  - override_in_extension
+  - pattern_matching_keywords
+  - prefer_self_type_over_type_of_self
+  - prefer_zero_over_explicit_init
+  - prefixed_toplevel_constant
+  - private_action
+  - private_outlet
+  - prohibited_super_call
+  - quick_discouraged_call
+  - quick_discouraged_focused_test
+  - quick_discouraged_pending_test
+  - reduce_into
+  - redundant_nil_coalescing
+  - redundant_type_annotation
+  - required_enum_case
+  - single_test_class
+  - sorted_first_last
+  - sorted_imports
+  - static_operator
+  - strong_iboutlet
+  - switch_case_on_newline
+  - toggle_bool
+  - trailing_closure
+  - unavailable_function
+  - unneeded_parentheses_in_closure_argument
+  - unowned_variable_capture
+  - untyped_error_in_catch
+  - unused_closure_parameter
+  - unused_enumerated
+  - unused_optional_binding
+  - vertical_parameter_alignment_on_call
+  - vertical_whitespace_closing_braces
+  - vertical_whitespace_opening_braces
+  - weak_delegate
+  - xct_specific_matcher
+  - yoda_condition
+
+# Analyzer rules (run with 'swiftlint analyze')
+analyzer_rules:
+  - unused_import
+  - unused_declaration
+
+# Disabled rules that might be too strict for this project
+disabled_rules:
+  - todo
+  - large_tuple
+  - cyclomatic_complexity
+
+# Custom rule configurations
+force_unwrapping:
+  severity: error
+
+nslocalizedstring_key:
+  severity: warning
+
+file_header:
+  required_pattern: |
+    \/\/
+    \/\/  .*\.swift
+    \/\/  Glimpsify.*
+    \/\/
+    \/\/  Created by .* on .*\.
+    \/\/
+
+# Multiline configurations
+multiline_arguments:
+  first_argument_location: next_line
+  only_enforce_after_first_closure_on_first_line: true
+
+multiline_parameters:
+  allows_single_line: true
+
+# Import organization
+sorted_imports:
+  severity: warning
+
+# Private outlets and actions (for UIKit compatibility)
+private_outlet:
+  allow_private_set: true
+
+# Function parameter alignment
+vertical_parameter_alignment_on_call:
+  severity: warning
+
+# Closure spacing
+closure_spacing:
+  severity: warning
+
+# Custom severity levels
+trailing_whitespace:
+  severity: warning
+
+vertical_whitespace:
+  max_empty_lines: 2
+
+# Reporter format (choose one)
+reporter: "xcode"

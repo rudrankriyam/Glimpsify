@@ -6,10 +6,21 @@
 //
 
 import SwiftUI
+import UIKit
+
+// MARK: - Constants
+private enum ExternalURLs {
+  static let groqConsole = "https://console.groq.com"
+  static let githubRepo = "https://github.com/rudrankriyam/Glimpsify"
+
+  static func url(for string: String) -> URL? {
+    URL(string: string)
+  }
+}
 
 struct SettingsView: View {
   @AppStorage("apiProvider") private var apiProvider: APIProvider = .groq
-  @AppStorage("maxCharacterCount") private var maxCharacterCount = 1000
+  @AppStorage("maxCharacterCount") private var maxCharacterCount = 1_000
   @AppStorage("autoGeneration") private var autoGeneration = false
 
   @State private var apiKey = ""
@@ -109,15 +120,16 @@ struct SettingsView: View {
         .disabled(apiKey.isEmpty || isValidatingKey)
       }
       .padding(.vertical, 8)
-
     } header: {
       Label("API Configuration", systemImage: "gear")
     } footer: {
       VStack(alignment: .leading, spacing: 8) {
         Text("Get your free API key from console.groq.com")
 
-        Link("Get Groq API Key", destination: URL(string: "https://console.groq.com")!)
-          .font(.caption)
+        if let url = ExternalURLs.url(for: ExternalURLs.groqConsole) {
+          Link("Get Groq API Key", destination: url)
+            .font(.caption)
+        }
       }
     }
   }
@@ -144,7 +156,7 @@ struct SettingsView: View {
           value: Binding(
             get: { Double(maxCharacterCount) },
             set: { maxCharacterCount = Int($0) }
-          ), in: 100...2000, step: 50
+          ), in: 100...2_000, step: 50
         ) {
           Text("Character Limit")
         } minimumValueLabel: {
@@ -180,7 +192,6 @@ struct SettingsView: View {
           .labelsHidden()
       }
       .padding(.vertical, 4)
-
     } header: {
       Label("Generation Settings", systemImage: "sparkles")
     }
@@ -203,7 +214,6 @@ struct SettingsView: View {
         description: "Select images from your photo library",
         action: openPhotosSettings
       )
-
     } header: {
       Label("Privacy & Permissions", systemImage: "hand.raised.fill")
     } footer: {
@@ -251,23 +261,24 @@ struct SettingsView: View {
       .padding(.vertical, 4)
 
       // Support
-      Link(destination: URL(string: "https://github.com/rudrankriyam/Glimpsify")!) {
-        HStack {
-          Image(systemName: "heart.fill")
-            .foregroundStyle(.red)
-            .frame(width: 24)
+      if let url = ExternalURLs.url(for: ExternalURLs.githubRepo) {
+        Link(destination: url) {
+          HStack {
+            Image(systemName: "heart.fill")
+              .foregroundStyle(.red)
+              .frame(width: 24)
 
-          Text("Support & Feedback")
+            Text("Support & Feedback")
 
-          Spacer()
+            Spacer()
 
-          Image(systemName: "arrow.up.right")
-            .font(.caption)
-            .foregroundStyle(.secondary)
+            Image(systemName: "arrow.up.right")
+              .font(.caption)
+              .foregroundStyle(.secondary)
+          }
         }
+        .padding(.vertical, 4)
       }
-      .padding(.vertical, 4)
-
     } header: {
       Label("About", systemImage: "heart.fill")
     }

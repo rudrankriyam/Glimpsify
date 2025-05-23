@@ -11,7 +11,7 @@ import SwiftUI
 struct GlimpsifyApp: App {
     @State private var clipboardManager = ClipboardManager()
     @State private var altTextGenerator = AltTextGenerator()
-    
+
     var body: some Scene {
         MenuBarExtra("Glimpsify", systemImage: "text.bubble") {
             ContentView()
@@ -19,7 +19,7 @@ struct GlimpsifyApp: App {
                 .environment(altTextGenerator)
         }
         .menuBarExtraStyle(.window)
-        
+
         Settings {
             SettingsView()
         }

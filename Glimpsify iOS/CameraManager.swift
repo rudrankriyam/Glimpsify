@@ -30,7 +30,7 @@ class CameraManager: NSObject {
 
   // Computed property for CameraView compatibility
   var previewLayer: AVCaptureVideoPreviewLayer? {
-    return getPreviewLayer()
+    getPreviewLayer()
   }
 
   // Check if flash is available on current camera
@@ -117,7 +117,6 @@ class CameraManager: NSObject {
           videoPreviewLayer?.session = session
         }
       }
-
     } catch {
       await MainActor.run {
         self.error = .configurationFailed
@@ -166,7 +165,7 @@ class CameraManager: NSObject {
       }
       currentDevice.unlockForConfiguration()
     } catch {
-      print("Error configuring flash: \(error)")
+      // Flash configuration failed - mode will fallback to .off during capture
     }
   }
 
@@ -179,7 +178,7 @@ class CameraManager: NSObject {
       let newCamera = AVCaptureDevice.default(
         .builtInWideAngleCamera, for: .video, position: newPosition)
     else {
-      print("Camera not available for position: \(newPosition)")
+      // Camera not available for the requested position
       return
     }
 
@@ -203,12 +202,12 @@ class CameraManager: NSObject {
         if let oldInput = currentCameraInput, session.canAddInput(oldInput) {
           session.addInput(oldInput)
         }
-        print("Cannot add new camera input")
+        // Failed to add new camera input - keeping existing configuration
       }
 
       session.commitConfiguration()
     } catch {
-      print("Error switching camera: \(error)")
+      // Error switching camera - keeping current configuration
     }
   }
 
@@ -223,8 +222,7 @@ class CameraManager: NSObject {
     // Only set flash mode if the photoOutput supports it
     if let currentDevice = currentCameraInput?.device,
       currentDevice.hasFlash,
-      photoOutput.supportedFlashModes.contains(currentFlashMode)
-    {
+      photoOutput.supportedFlashModes.contains(currentFlashMode) {
       settings.flashMode = currentFlashMode
     } else {
       settings.flashMode = .off
@@ -246,8 +244,7 @@ class CameraManager: NSObject {
     // Only set flash mode if the photoOutput supports it
     if let currentDevice = currentCameraInput?.device,
       currentDevice.hasFlash,
-      photoOutput.supportedFlashModes.contains(currentFlashMode)
-    {
+      photoOutput.supportedFlashModes.contains(currentFlashMode) {
       settings.flashMode = currentFlashMode
     } else {
       settings.flashMode = .off

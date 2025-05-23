@@ -10,6 +10,18 @@ import Foundation
 import Security
 import SwiftUI
 
+// MARK: - API Configuration
+enum APIEndpoint {
+  case groqChatCompletions
+
+  var url: URL? {
+    switch self {
+    case .groqChatCompletions:
+      return URL(string: "https://api.groq.com/openai/v1/chat/completions")
+    }
+  }
+}
+
 // MARK: - Groq API Request/Response Models
 struct GroqChatRequest: Codable {
   let model: String
@@ -69,7 +81,7 @@ enum APIProvider: String, CaseIterable, Codable {
   }
 
   var keychainKey: String {
-    return "glimpsify_\(rawValue)_api_key"
+    "glimpsify_\(rawValue)_api_key"
   }
 }
 
@@ -77,6 +89,7 @@ enum APIProvider: String, CaseIterable, Codable {
 enum AltTextError: LocalizedError {
   case missingAPIKey
   case invalidResponse
+  case invalidURL
   case apiError(Int, String)
 
   var errorDescription: String? {
@@ -85,6 +98,8 @@ enum AltTextError: LocalizedError {
       return "Groq API key not found. Please set it in Settings."
     case .invalidResponse:
       return "Invalid response from API"
+    case .invalidURL:
+      return "Invalid API endpoint URL"
     case .apiError(let code, let message):
       return "API error (\(code)): \(message)"
     }
@@ -104,7 +119,7 @@ class KeychainManager {
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrAccount as String: provider.keychainKey,
-      kSecValueData as String: data,
+      kSecValueData as String: data
     ]
 
     // Delete existing item
@@ -119,7 +134,7 @@ class KeychainManager {
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrAccount as String: provider.keychainKey,
       kSecReturnData as String: true,
-      kSecMatchLimit as String: kSecMatchLimitOne,
+      kSecMatchLimit as String: kSecMatchLimitOne
     ]
 
     var result: AnyObject?
@@ -138,7 +153,7 @@ class KeychainManager {
   func deleteAPIKey(for provider: APIProvider) {
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
-      kSecAttrAccount as String: provider.keychainKey,
+      kSecAttrAccount as String: provider.keychainKey
     ]
 
     SecItemDelete(query as CFDictionary)
@@ -153,7 +168,7 @@ class KeychainManager {
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrAccount as String: key,
-      kSecValueData as String: data,
+      kSecValueData as String: data
     ]
 
     SecItemDelete(query as CFDictionary)
@@ -166,7 +181,7 @@ class KeychainManager {
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrAccount as String: key,
       kSecReturnData as String: true,
-      kSecMatchLimit as String: kSecMatchLimitOne,
+      kSecMatchLimit as String: kSecMatchLimitOne
     ]
 
     var result: AnyObject?
@@ -185,7 +200,7 @@ class KeychainManager {
   func delete(key: String) -> Bool {
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
-      kSecAttrAccount as String: key,
+      kSecAttrAccount as String: key
     ]
 
     let status = SecItemDelete(query as CFDictionary)
@@ -241,7 +256,7 @@ class AltTextGenerator {
             GroqContent(
               type: "text",
               text: """
-                Generate concise, descriptive alt text for this image suitable for Twitter (max 1000 characters). 
+                Generate concise, descriptive alt text for this image suitable for Twitter (max 1000 characters).
                 Focus on:
                 - Main subject and important details
                 - Actions or context if relevant
@@ -258,7 +273,7 @@ class AltTextGenerator {
               type: "image_url",
               text: nil,
               imageUrl: GroqImageUrl(url: "data:image/jpeg;base64,\(base64Image)")
-            ),
+            )
           ]
         )
       ],
@@ -270,7 +285,9 @@ class AltTextGenerator {
 
     let jsonData = try JSONEncoder().encode(request)
 
-    let url = URL(string: "https://api.groq.com/openai/v1/chat/completions")!
+    guard let url = APIEndpoint.groqChatCompletions.url else {
+      throw AltTextError.invalidURL
+    }
     var urlRequest = URLRequest(url: url)
     urlRequest.httpMethod = "POST"
     urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
@@ -330,7 +347,9 @@ class AltTextGenerator {
     do {
       let jsonData = try JSONEncoder().encode(testRequest)
 
-      let url = URL(string: "https://api.groq.com/openai/v1/chat/completions")!
+      guard let url = APIEndpoint.groqChatCompletions.url else {
+        throw AltTextError.invalidURL
+      }
       var urlRequest = URLRequest(url: url)
       urlRequest.httpMethod = "POST"
       urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")

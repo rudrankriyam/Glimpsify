@@ -10,8 +10,8 @@ import SwiftUI
 
 struct SettingsView: View {
   @AppStorage("apiProvider") private var apiProvider: APIProvider = .groq
-  @AppStorage("maxCharacters") private var maxCharacters: Int = 1000
-  @AppStorage("autoGenerate") private var autoGenerate: Bool = false
+  @AppStorage("maxCharacters") private var maxCharacters: Int = 1_000
+  @AppStorage("autoGenerate") private var autoGenerate = false
 
   @State private var apiKey: String = ""
   @State private var showingAPIKeyAlert = false
@@ -143,7 +143,9 @@ struct SettingsView: View {
 
   private func validateGroqKey(_ key: String) async -> Bool {
     do {
-      let url = URL(string: "https://api.groq.com/openai/v1/chat/completions")!
+      guard let url = APIEndpoint.groqChatCompletions.url else {
+        return false
+      }
       var request = URLRequest(url: url)
       request.httpMethod = "POST"
       request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
@@ -154,11 +156,11 @@ struct SettingsView: View {
         "messages": [
           [
             "role": "user",
-            "content": "Hello, this is a test message.",
+            "content": "Hello, this is a test message."
           ]
         ],
         "max_completion_tokens": 10,
-        "temperature": 0.1,
+        "temperature": 0.1
       ]
 
       request.httpBody = try JSONSerialization.data(withJSONObject: payload)

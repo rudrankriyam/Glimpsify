@@ -56,8 +56,7 @@ struct PhotosView: View {
     .onChange(of: selectedPhoto) { _, newPhoto in
       Task { @MainActor in
         if let data = try? await newPhoto?.loadTransferable(type: Data.self),
-          let image = UIImage(data: data)
-        {
+          let image = UIImage(data: data) {
           selectedImage = image
           showingAltText = true
         }
@@ -341,8 +340,7 @@ struct AltTextResultView: View {
     )
 
     if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-      let window = windowScene.windows.first
-    {
+      let window = windowScene.windows.first {
       window.rootViewController?.present(activityController, animated: true)
     }
   }

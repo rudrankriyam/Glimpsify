@@ -69,7 +69,7 @@ enum APIProvider: String, CaseIterable, Codable {
   }
 
   var keychainKey: String {
-    return "glimpsify_\(rawValue)_api_key"
+    "glimpsify_\(rawValue)_api_key"
   }
 }
 
@@ -107,7 +107,7 @@ class KeychainManager {
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrAccount as String: provider.keychainKey,
-      kSecValueData as String: data,
+      kSecValueData as String: data
     ]
 
     // Delete existing item
@@ -122,7 +122,7 @@ class KeychainManager {
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrAccount as String: provider.keychainKey,
       kSecReturnData as String: true,
-      kSecMatchLimit as String: kSecMatchLimitOne,
+      kSecMatchLimit as String: kSecMatchLimitOne
     ]
 
     var result: AnyObject?
@@ -141,7 +141,7 @@ class KeychainManager {
   func deleteAPIKey(for provider: APIProvider) {
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
-      kSecAttrAccount as String: provider.keychainKey,
+      kSecAttrAccount as String: provider.keychainKey
     ]
 
     SecItemDelete(query as CFDictionary)
@@ -209,7 +209,7 @@ class AltTextGenerator {
               type: "image_url",
               text: nil,
               imageUrl: GroqImageUrl(url: dataURL)
-            ),
+            )
           ]
         )
       ],
@@ -235,8 +235,7 @@ class AltTextGenerator {
     let (data, response) = try await URLSession.shared.data(for: urlRequest)
 
     if let httpResponse = response as? HTTPURLResponse,
-      httpResponse.statusCode != 200
-    {
+      httpResponse.statusCode != 200 {
       let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
       throw AltTextError.apiError(httpResponse.statusCode, errorMessage)
     }

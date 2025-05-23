@@ -135,7 +135,7 @@ struct ContentView: View {
 
         Text("\(altText.count)/1000")
           .font(.caption2)
-          .foregroundStyle(altText.count > 1000 ? .red : .secondary)
+          .foregroundStyle(altText.count > 1_000 ? .red : .secondary)
           .monospacedDigit()
       }
 
