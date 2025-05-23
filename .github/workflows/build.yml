@@ -113,10 +113,10 @@ jobs:
           echo "Submitting for notarization..."
           SUBMISSION_OUTPUT_FILE="submission_output.txt"
           # Run submit command, allow it to 'fail' if status is Invalid, and save all output
-          xcrun notarytool submit Glimpsify.zip \\
-            --apple-id "${{ secrets.NOTARIZATION_APPLE_ID }}" \\
-            --password "${{ secrets.NOTARIZATION_PASSWORD }}" \\
-            --team-id "${{ secrets.TEAM_ID }}" \\
+          xcrun notarytool submit Glimpsify.zip \
+            --apple-id "${{ secrets.NOTARIZATION_APPLE_ID }}" \
+            --password "${{ secrets.NOTARIZATION_PASSWORD }}" \
+            --team-id "${{ secrets.TEAM_ID }}" \
             --wait > "$SUBMISSION_OUTPUT_FILE" 2>&1 || true
 
           echo "--- Full submission command output from notarytool ---"
@@ -133,9 +133,9 @@ jobs:
           if [ -n "$SUBMISSION_ID" ]; then
             echo "Fetching notarization log for ID: $SUBMISSION_ID..."
             # Fetch the log
-            xcrun notarytool log "$SUBMISSION_ID" \\
-              --apple-id "${{ secrets.NOTARIZATION_APPLE_ID }}" \\
-              --password "${{ secrets.NOTARIZATION_PASSWORD }}" \\
+            xcrun notarytool log "$SUBMISSION_ID" \
+              --apple-id "${{ secrets.NOTARIZATION_APPLE_ID }}" \
+              --password "${{ secrets.NOTARIZATION_PASSWORD }}" \
               --team-id "${{ secrets.TEAM_ID }}"
           else
             echo "Could not extract Submission ID from the notarytool output. Cannot fetch detailed log."
