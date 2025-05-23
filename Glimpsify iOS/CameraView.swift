@@ -13,169 +13,446 @@ struct CameraView: View {
   @Environment(AltTextGenerator.self) private var altTextGenerator
   @State private var showingImagePicker = false
   @State private var capturedImage: UIImage?
-  @State private var showingAltText = false
-  @State private var isFlashOn = false
+  @State private var showingResult = false
+  @State private var flashMode: AVCaptureDevice.FlashMode = .off
+  @State private var isCapturing = false
 
   var body: some View {
-    NavigationView {
+    GeometryReader { geometry in
       ZStack {
-        // Background gradient for premium feel
-        LinearGradient(
-          colors: [Color.black, Color.gray.opacity(0.8)],
-          startPoint: .top,
-          endPoint: .bottom
-        )
-        .ignoresSafeArea()
+        // Black background covering everything
+        Color.black
+          .ignoresSafeArea(.all)
 
-        VStack(spacing: 0) {
-          // Header with hierarchy
-          headerView
+        // Camera preview
+        cameraPreview
+          .ignoresSafeArea(.all)
 
-          // Camera preview area
-          cameraPreviewArea
+        // Camera controls overlay
+        VStack {
+          // Top controls
+          topControls
 
-          // Controls with perfect balance
-          cameraControls
+          Spacer()
+
+          // Bottom controls
+          bottomControls
         }
+        .padding(.horizontal, 20)
+        .padding(.top, 16)
+        .padding(.bottom, max(16, geometry.safeAreaInsets.bottom + 16))
       }
-      .navigationBarHidden(true)
+    }
+    .background(.black)
+    .task {
+      _ = await cameraManager.requestPermission()
+      await cameraManager.setupCamera()
+      cameraManager.startSession()
     }
     .sheet(isPresented: $showingImagePicker) {
       ImagePicker(image: $capturedImage)
     }
-    .sheet(isPresented: $showingAltText) {
+    .sheet(isPresented: $showingResult) {
       if let image = capturedImage {
-        AltTextResultView(image: image)
+        CaptureResultView(image: image, isAnalyzing: $isCapturing)
           .environment(altTextGenerator)
       }
     }
-    .onChange(of: capturedImage) { _, newImage in
-      if newImage != nil {
-        showingAltText = true
+  }
+
+  private var cameraPreview: some View {
+    GeometryReader { geometry in
+      ZStack {
+        // Ensure black background
+        Color.black
+          .ignoresSafeArea(.all)
+
+        CameraPreviewView(cameraManager: cameraManager)
+
+        // Subtle viewfinder overlay
+        VStack {
+          Spacer()
+
+          RoundedRectangle(cornerRadius: 16)
+            .stroke(.white.opacity(0.3), lineWidth: 1)
+            .frame(width: min(280, geometry.size.width - 60), height: 180)
+            .overlay(
+              VStack {
+                HStack {
+                  Rectangle()
+                    .fill(.white.opacity(0.6))
+                    .frame(width: 16, height: 1)
+                  Spacer()
+                  Rectangle()
+                    .fill(.white.opacity(0.6))
+                    .frame(width: 16, height: 1)
+                }
+                Spacer()
+                HStack {
+                  Rectangle()
+                    .fill(.white.opacity(0.6))
+                    .frame(width: 16, height: 1)
+                  Spacer()
+                  Rectangle()
+                    .fill(.white.opacity(0.6))
+                    .frame(width: 16, height: 1)
+                }
+              }
+              .padding(6)
+            )
+
+          Text("Position subject in frame")
+            .font(.system(size: 14, weight: .medium))
+            .foregroundStyle(.white.opacity(0.8))
+            .padding(.top, 12)
+
+          Spacer()
+        }
       }
     }
   }
 
-  private var headerView: some View {
+  private var topControls: some View {
     HStack {
-      Text("Glimpsify")
-        .font(.largeTitle)
-        .fontWeight(.bold)
-        .foregroundStyle(.white)
+      // Flash control
+      Button(action: toggleFlash) {
+        Image(systemName: flashIconName)
+          .font(.system(size: 18, weight: .medium))
+          .foregroundStyle(flashMode == .on ? .yellow : .white)
+          .frame(width: 40, height: 40)
+          .background(.black.opacity(0.3), in: Circle())
+          .overlay(
+            Circle()
+              .stroke(.white.opacity(0.2), lineWidth: 0.5)
+          )
+      }
 
       Spacer()
 
-      // Flash toggle with smooth animation
+      // Camera status
+      HStack(spacing: 6) {
+        Circle()
+          .fill(cameraManager.isAuthorized ? .green : .red)
+          .frame(width: 6, height: 6)
+
+        Text(cameraManager.isAuthorized ? "Ready" : "No Access")
+          .font(.system(size: 12, weight: .medium))
+          .foregroundStyle(.white)
+      }
+      .padding(.horizontal, 10)
+      .padding(.vertical, 6)
+      .background(.black.opacity(0.4), in: Capsule())
+
+      Spacer()
+
+      // Camera flip
       Button(action: {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-          isFlashOn.toggle()
-        }
+        cameraManager.flipCamera()
       }) {
-        Image(systemName: isFlashOn ? "bolt.fill" : "bolt.slash.fill")
-          .font(.title2)
-          .foregroundStyle(isFlashOn ? .yellow : .white)
-          .scaleEffect(isFlashOn ? 1.1 : 1.0)
-          .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isFlashOn)
+        Image(systemName: "camera.rotate")
+          .font(.system(size: 18, weight: .medium))
+          .foregroundStyle(.white)
+          .frame(width: 40, height: 40)
+          .background(.black.opacity(0.3), in: Circle())
+          .overlay(
+            Circle()
+              .stroke(.white.opacity(0.2), lineWidth: 0.5)
+          )
       }
     }
-    .padding(.horizontal, 24)
-    .padding(.top, 8)
   }
 
-  private var cameraPreviewArea: some View {
-    ZStack {
-      // Camera preview placeholder with beautiful styling
-      RoundedRectangle(cornerRadius: 24)
-        .fill(.ultraThinMaterial)
-        .overlay {
-          VStack(spacing: 16) {
-            Image(systemName: "camera.viewfinder")
-              .font(.system(size: 60))
-              .foregroundStyle(.white.opacity(0.8))
+  private var bottomControls: some View {
+    VStack(spacing: 20) {
+      // Instruction text
+      Text("Tap to capture and analyze")
+        .font(.system(size: 15, weight: .medium))
+        .foregroundStyle(.white.opacity(0.9))
 
-            Text("Tap to capture and generate alt text")
-              .font(.headline)
-              .foregroundStyle(.white.opacity(0.9))
-              .multilineTextAlignment(.center)
-          }
-          .padding(32)
-        }
-        .overlay {
-          // Elegant border with subtle glow
-          RoundedRectangle(cornerRadius: 24)
-            .stroke(.white.opacity(0.2), lineWidth: 1)
-        }
-        .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
-    }
-    .padding(.horizontal, 24)
-    .padding(.vertical, 32)
-    .frame(maxHeight: .infinity)
-  }
-
-  private var cameraControls: some View {
-    VStack(spacing: 24) {
-      // Primary capture button with Apple-style design
-      Button(action: {
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+      HStack(spacing: 50) {
+        // Photo library
+        Button(action: {
           showingImagePicker = true
+        }) {
+          RoundedRectangle(cornerRadius: 8)
+            .fill(.white.opacity(0.2))
+            .frame(width: 50, height: 50)
+            .overlay(
+              Image(systemName: "photo.on.rectangle")
+                .font(.system(size: 20, weight: .medium))
+                .foregroundStyle(.white)
+            )
         }
-      }) {
-        ZStack {
-          Circle()
-            .fill(.white)
-            .frame(width: 80, height: 80)
-            .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
 
-          Circle()
-            .fill(.blue)
-            .frame(width: 68, height: 68)
+        // Capture button - Apple style
+        Button(action: capturePhoto) {
+          ZStack {
+            Circle()
+              .fill(.white)
+              .frame(width: 70, height: 70)
 
-          Image(systemName: "camera.fill")
-            .font(.title)
-            .foregroundStyle(.white)
-        }
-      }
-      .scaleEffect(1.0)
-      .animation(.spring(response: 0.3, dampingFraction: 0.7), value: showingImagePicker)
+            Circle()
+              .stroke(.white, lineWidth: 3)
+              .frame(width: 84, height: 84)
 
-      // Secondary actions with perfect spacing
-      HStack(spacing: 40) {
-        // Photo library access
-        Button(action: {}) {
-          VStack(spacing: 8) {
-            Image(systemName: "photo.on.rectangle")
-              .font(.title2)
-              .foregroundStyle(.white)
-
-            Text("Photos")
-              .font(.caption)
-              .foregroundStyle(.white.opacity(0.8))
+            if isCapturing {
+              ProgressView()
+                .scaleEffect(1.2)
+                .tint(.black)
+            }
           }
         }
+        .disabled(isCapturing || !cameraManager.isAuthorized)
+        .scaleEffect(isCapturing ? 0.95 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isCapturing)
 
-        Spacer()
-
-        // Settings quick access
-        Button(action: {}) {
-          VStack(spacing: 8) {
-            Image(systemName: "gear")
-              .font(.title2)
-              .foregroundStyle(.white)
-
-            Text("Settings")
-              .font(.caption)
-              .foregroundStyle(.white.opacity(0.8))
-          }
+        // Info/settings
+        Button(action: {
+          // Show info
+        }) {
+          RoundedRectangle(cornerRadius: 8)
+            .fill(.white.opacity(0.2))
+            .frame(width: 50, height: 50)
+            .overlay(
+              Image(systemName: "info")
+                .font(.system(size: 20, weight: .medium))
+                .foregroundStyle(.white)
+            )
         }
       }
-      .padding(.horizontal, 60)
     }
-    .padding(.bottom, 40)
+  }
+
+  private var flashIconName: String {
+    switch flashMode {
+    case .on: return "bolt.fill"
+    case .off: return "bolt.slash"
+    case .auto: return "bolt.badge.automatic"
+    @unknown default: return "bolt.slash"
+    }
+  }
+
+  private func toggleFlash() {
+    switch flashMode {
+    case .off: flashMode = .on
+    case .on: flashMode = .auto
+    case .auto: flashMode = .off
+    @unknown default: flashMode = .off
+    }
+    cameraManager.setFlashMode(flashMode)
+  }
+
+  private func capturePhoto() {
+    guard cameraManager.isAuthorized else { return }
+
+    isCapturing = true
+
+    cameraManager.capturePhoto { image in
+      DispatchQueue.main.async {
+        if let image = image {
+          self.capturedImage = image
+          self.showingResult = true
+        }
+        self.isCapturing = false
+      }
+    }
   }
 }
 
-// MARK: - Supporting Views
+// MARK: - Camera Preview View
+struct CameraPreviewView: UIViewRepresentable {
+  let cameraManager: CameraManager
 
+  func makeUIView(context: Context) -> UIView {
+    let view = UIView()
+    view.backgroundColor = .black
+
+    if let previewLayer = cameraManager.previewLayer {
+      previewLayer.frame = view.bounds
+      previewLayer.videoGravity = .resizeAspectFill
+      view.layer.addSublayer(previewLayer)
+    }
+
+    return view
+  }
+
+  func updateUIView(_ uiView: UIView, context: Context) {
+    // Ensure black background is maintained
+    uiView.backgroundColor = .black
+
+    if let previewLayer = cameraManager.previewLayer {
+      previewLayer.frame = uiView.bounds
+    }
+  }
+}
+
+// MARK: - Capture Result View
+struct CaptureResultView: View {
+  let image: UIImage
+  @Environment(AltTextGenerator.self) private var altTextGenerator
+  @Environment(\.dismiss) private var dismiss
+  @Binding var isAnalyzing: Bool
+  @State private var generatedText = ""
+
+  var body: some View {
+    NavigationView {
+      ScrollView {
+        VStack(spacing: 24) {
+          // Image preview with Apple styling
+          Image(uiImage: image)
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .frame(maxHeight: 350)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .background(
+              RoundedRectangle(cornerRadius: 12)
+                .fill(.quaternary)
+            )
+
+          // Result section
+          VStack(spacing: 16) {
+            HStack {
+              Text("Description")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(.primary)
+              Spacer()
+            }
+
+            if isAnalyzing {
+              HStack(spacing: 12) {
+                ProgressView()
+                  .scaleEffect(0.9)
+                Text("Analyzing image...")
+                  .font(.system(size: 16, weight: .regular))
+                  .foregroundStyle(.secondary)
+                Spacer()
+              }
+              .padding(16)
+              .background(.quaternary, in: RoundedRectangle(cornerRadius: 12))
+            } else if !generatedText.isEmpty {
+              VStack(spacing: 12) {
+                Text(generatedText)
+                  .font(.system(size: 16, weight: .regular))
+                  .lineSpacing(4)
+                  .frame(maxWidth: .infinity, alignment: .leading)
+                  .padding(16)
+                  .background(.quaternary, in: RoundedRectangle(cornerRadius: 12))
+                  .textSelection(.enabled)
+
+                HStack(spacing: 12) {
+                  Button(action: shareText) {
+                    HStack(spacing: 6) {
+                      Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 15, weight: .medium))
+                      Text("Share")
+                        .font(.system(size: 16, weight: .semibold))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .background(.blue)
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                  }
+
+                  Button(action: copyText) {
+                    HStack(spacing: 6) {
+                      Image(systemName: "doc.on.clipboard")
+                        .font(.system(size: 15, weight: .medium))
+                      Text("Copy")
+                        .font(.system(size: 16, weight: .semibold))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .background(.quaternary)
+                    .foregroundStyle(.secondary)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                  }
+                }
+              }
+            } else {
+              VStack(spacing: 16) {
+                Text("Tap 'Analyze' to generate an accessible description")
+                  .font(.system(size: 16, weight: .regular))
+                  .foregroundStyle(.secondary)
+                  .multilineTextAlignment(.center)
+                  .padding(16)
+                  .background(.quaternary, in: RoundedRectangle(cornerRadius: 12))
+
+                Button(action: analyzeImage) {
+                  HStack(spacing: 8) {
+                    Image(systemName: "sparkles")
+                      .font(.system(size: 16, weight: .semibold))
+                    Text("Analyze Image")
+                      .font(.system(size: 17, weight: .semibold))
+                  }
+                  .frame(maxWidth: .infinity)
+                  .frame(height: 50)
+                  .background(.blue)
+                  .foregroundStyle(.white)
+                  .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+              }
+            }
+          }
+        }
+        .padding(20)
+      }
+      .background(Color(.systemGroupedBackground))
+      .navigationTitle("Captured Image")
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .navigationBarTrailing) {
+          Button("Done") {
+            dismiss()
+          }
+          .font(.system(size: 16, weight: .medium))
+        }
+      }
+    }
+    .onAppear {
+      if let existingText = altTextGenerator.generatedText, !existingText.isEmpty {
+        generatedText = existingText
+      }
+    }
+  }
+
+  private func analyzeImage() {
+    isAnalyzing = true
+
+    Task {
+      await altTextGenerator.generateAltText(for: image)
+      await MainActor.run {
+        if let text = altTextGenerator.generatedText {
+          generatedText = text
+        } else if let error = altTextGenerator.error {
+          generatedText = "Failed to analyze image: \(error)"
+        }
+        isAnalyzing = false
+      }
+    }
+  }
+
+  private func copyText() {
+    UIPasteboard.general.string = generatedText
+    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+    impactFeedback.impactOccurred()
+  }
+
+  private func shareText() {
+    let activityController = UIActivityViewController(
+      activityItems: [generatedText],
+      applicationActivities: nil
+    )
+
+    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+      let window = windowScene.windows.first
+    {
+      window.rootViewController?.present(activityController, animated: true)
+    }
+  }
+}
+
+// MARK: - Image Picker
 struct ImagePicker: UIViewControllerRepresentable {
   @Binding var image: UIImage?
   @Environment(\.dismiss) private var dismiss
@@ -183,8 +460,8 @@ struct ImagePicker: UIViewControllerRepresentable {
   func makeUIViewController(context: Context) -> UIImagePickerController {
     let picker = UIImagePickerController()
     picker.delegate = context.coordinator
-    picker.sourceType = .camera
-    picker.allowsEditing = true
+    picker.sourceType = .photoLibrary
+    picker.allowsEditing = false
     return picker
   }
 
@@ -205,140 +482,14 @@ struct ImagePicker: UIViewControllerRepresentable {
       _ picker: UIImagePickerController,
       didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
     ) {
-      if let editedImage = info[.editedImage] as? UIImage {
-        parent.image = editedImage
-      } else if let originalImage = info[.originalImage] as? UIImage {
-        parent.image = originalImage
+      if let image = info[.originalImage] as? UIImage {
+        parent.image = image
       }
       parent.dismiss()
     }
 
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
       parent.dismiss()
-    }
-  }
-}
-
-struct AltTextResultView: View {
-  let image: UIImage
-  @Environment(AltTextGenerator.self) private var altTextGenerator
-  @Environment(\.dismiss) private var dismiss
-  @State private var hasGeneratedText = false
-
-  var body: some View {
-    NavigationView {
-      ScrollView {
-        VStack(spacing: 24) {
-          // Image preview with elegant styling
-          Image(uiImage: image)
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(maxHeight: 300)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-
-          // Alt text section with hierarchy
-          VStack(alignment: .leading, spacing: 16) {
-            HStack {
-              Text("Generated Alt Text")
-                .font(.title2)
-                .fontWeight(.semibold)
-
-              Spacer()
-
-              if let text = altTextGenerator.generatedText {
-                Text("\(text.count)/1000")
-                  .font(.caption)
-                  .foregroundStyle(.secondary)
-                  .monospacedDigit()
-              }
-            }
-
-            if altTextGenerator.isGenerating {
-              generatingView
-            } else if let text = altTextGenerator.generatedText {
-              generatedTextView(text)
-            } else {
-              generateButton
-            }
-          }
-          .padding(.horizontal, 20)
-        }
-        .padding(.vertical, 20)
-      }
-      .navigationTitle("Alt Text")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .navigationBarTrailing) {
-          Button("Done") {
-            dismiss()
-          }
-        }
-      }
-    }
-    .onAppear {
-      if !hasGeneratedText {
-        generateAltText()
-        hasGeneratedText = true
-      }
-    }
-  }
-
-  private var generatingView: some View {
-    VStack(spacing: 16) {
-      ProgressView()
-        .scaleEffect(1.2)
-        .tint(.blue)
-
-      Text("Analyzing image...")
-        .font(.subheadline)
-        .foregroundStyle(.secondary)
-    }
-    .frame(maxWidth: .infinity)
-    .padding(.vertical, 40)
-    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-  }
-
-  private func generatedTextView(_ text: String) -> some View {
-    VStack(spacing: 16) {
-      Text(text)
-        .font(.body)
-        .textSelection(.enabled)
-        .padding(16)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-
-      HStack(spacing: 12) {
-        Button(action: {
-          UIPasteboard.general.string = text
-        }) {
-          Label("Copy", systemImage: "doc.on.clipboard")
-            .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.borderedProminent)
-
-        Button(action: {
-          // Share functionality
-        }) {
-          Label("Share", systemImage: "square.and.arrow.up")
-            .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.bordered)
-      }
-    }
-  }
-
-  private var generateButton: some View {
-    Button(action: generateAltText) {
-      Label("Generate Alt Text", systemImage: "sparkles")
-        .frame(maxWidth: .infinity)
-    }
-    .buttonStyle(.borderedProminent)
-    .controlSize(.large)
-  }
-
-  private func generateAltText() {
-    Task {
-      await altTextGenerator.generateAltText(for: image)
     }
   }
 }

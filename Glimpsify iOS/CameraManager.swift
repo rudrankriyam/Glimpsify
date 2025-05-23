@@ -15,10 +15,23 @@ class CameraManager: NSObject {
   var isSessionRunning = false
   var capturedImage: UIImage?
   var error: CameraError?
+  var currentFlashMode: AVCaptureDevice.FlashMode = .off
+  var currentCameraPosition: AVCaptureDevice.Position = .back
 
   private var captureSession: AVCaptureSession?
   private var photoOutput: AVCapturePhotoOutput?
   private var videoPreviewLayer: AVCaptureVideoPreviewLayer?
+  private var currentCameraInput: AVCaptureDeviceInput?
+
+  // Computed property for CameraView compatibility
+  var isAuthorized: Bool {
+    authorizationStatus == .authorized
+  }
+
+  // Computed property for CameraView compatibility
+  var previewLayer: AVCaptureVideoPreviewLayer? {
+    return getPreviewLayer()
+  }
 
   override init() {
     super.init()
@@ -50,7 +63,8 @@ class CameraManager: NSObject {
     }
 
     guard
-      let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
+      let camera = AVCaptureDevice.default(
+        .builtInWideAngleCamera, for: .video, position: currentCameraPosition)
     else {
       await MainActor.run {
         error = .cameraUnavailable
@@ -82,6 +96,7 @@ class CameraManager: NSObject {
       await MainActor.run {
         captureSession = session
         photoOutput = output
+        currentCameraInput = input
       }
 
     } catch {
@@ -115,6 +130,48 @@ class CameraManager: NSObject {
     }
   }
 
+  func setFlashMode(_ flashMode: AVCaptureDevice.FlashMode) {
+    currentFlashMode = flashMode
+  }
+
+  func flipCamera() {
+    guard let session = captureSession else { return }
+
+    let newPosition: AVCaptureDevice.Position = currentCameraPosition == .back ? .front : .back
+
+    guard
+      let newCamera = AVCaptureDevice.default(
+        .builtInWideAngleCamera, for: .video, position: newPosition)
+    else {
+      return
+    }
+
+    do {
+      let newInput = try AVCaptureDeviceInput(device: newCamera)
+
+      session.beginConfiguration()
+
+      if let currentInput = currentCameraInput {
+        session.removeInput(currentInput)
+      }
+
+      if session.canAddInput(newInput) {
+        session.addInput(newInput)
+        currentCameraInput = newInput
+        currentCameraPosition = newPosition
+      } else {
+        // Re-add the old input if new one fails
+        if let currentInput = currentCameraInput {
+          session.addInput(currentInput)
+        }
+      }
+
+      session.commitConfiguration()
+    } catch {
+      print("Error switching camera: \(error)")
+    }
+  }
+
   func capturePhoto() {
     guard let photoOutput = photoOutput else {
       error = .captureSessionNotSetup
@@ -122,10 +179,28 @@ class CameraManager: NSObject {
     }
 
     let settings = AVCapturePhotoSettings()
-    settings.flashMode = .auto
+    settings.flashMode = currentFlashMode
 
     photoOutput.capturePhoto(with: settings, delegate: self)
   }
+
+  // New method with completion handler for CameraView compatibility
+  func capturePhoto(completion: @escaping (UIImage?) -> Void) {
+    guard let photoOutput = photoOutput else {
+      error = .captureSessionNotSetup
+      completion(nil)
+      return
+    }
+
+    let settings = AVCapturePhotoSettings()
+    settings.flashMode = currentFlashMode
+
+    // Store completion handler for delegate callback
+    self.captureCompletion = completion
+    photoOutput.capturePhoto(with: settings, delegate: self)
+  }
+
+  private var captureCompletion: ((UIImage?) -> Void)?
 
   func getPreviewLayer() -> AVCaptureVideoPreviewLayer? {
     guard let session = captureSession else { return nil }
@@ -148,6 +223,8 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
     if let error = error {
       DispatchQueue.main.async {
         self.error = .captureFailed(error.localizedDescription)
+        self.captureCompletion?(nil)
+        self.captureCompletion = nil
       }
       return
     }
@@ -157,6 +234,8 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
     else {
       DispatchQueue.main.async {
         self.error = .imageProcessingFailed
+        self.captureCompletion?(nil)
+        self.captureCompletion = nil
       }
       return
     }
@@ -164,6 +243,8 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
     DispatchQueue.main.async {
       self.capturedImage = image
       self.error = nil
+      self.captureCompletion?(image)
+      self.captureCompletion = nil
     }
   }
 }

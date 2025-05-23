@@ -11,283 +11,281 @@ import UIKit
 struct ClipboardView: View {
   @Environment(ClipboardManager.self) private var clipboardManager
   @Environment(AltTextGenerator.self) private var altTextGenerator
-  @AppStorage("apiProvider") private var apiProvider: APIProvider = .groq
+  @State private var showingResult = false
 
   var body: some View {
-    NavigationView {
-      ScrollView {
-        VStack(spacing: 24) {
-          // Header section with beautiful hierarchy
-          headerSection
-
-          // Main content area
-          mainContentArea
-
-          // Alt text display section
-          if let altText = altTextGenerator.generatedText {
-            altTextSection(altText)
-          }
-
-          // Error handling section
-          if let error = altTextGenerator.error {
-            errorSection(error)
-          }
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
-      }
-      .navigationTitle("Clipboard")
-      .navigationBarTitleDisplayMode(.large)
-      .refreshable {
-        clipboardManager.checkClipboard()
-      }
-    }
-  }
-
-  private var headerSection: some View {
-    VStack(spacing: 12) {
-      // App branding with elegant styling
-      HStack {
-        Image(systemName: "text.bubble.fill")
-          .font(.title)
-          .foregroundStyle(.blue)
-
-        VStack(alignment: .leading, spacing: 2) {
-          Text("Glimpsify")
-            .font(.title2)
-            .fontWeight(.bold)
-
-          Text("Powered by \(apiProvider.displayName)")
-            .font(.caption)
-            .foregroundStyle(.secondary)
+    ScrollView {
+      LazyVStack(spacing: 24) {
+        if clipboardManager.hasImage {
+          imageReadyCard
+        } else {
+          monitoringCard
         }
 
-        Spacer()
+        if let altText = altTextGenerator.generatedText, !altText.isEmpty {
+          resultCard(altText)
+        }
+
+        if let error = altTextGenerator.error {
+          errorCard(error)
+        }
       }
-      .padding(.vertical, 8)
-
-      // Status indicator with smooth animations
-      HStack {
-        Circle()
-          .fill(clipboardManager.hasImage ? .green : .orange)
-          .frame(width: 8, height: 8)
-          .scaleEffect(clipboardManager.hasImage ? 1.2 : 1.0)
-          .animation(.easeInOut(duration: 0.3), value: clipboardManager.hasImage)
-
-        Text(clipboardManager.hasImage ? "Image detected in clipboard" : "Monitoring clipboard...")
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
-
-        Spacer()
-      }
+      .padding(.horizontal, 20)
+      .padding(.vertical, 16)
     }
-    .padding(20)
-    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
-  }
-
-  private var mainContentArea: some View {
-    VStack(spacing: 20) {
-      if clipboardManager.hasImage {
-        imageDetectedSection
-      } else {
-        emptyStateSection
-      }
+    .background(Color(.systemGroupedBackground))
+    .refreshable {
+      clipboardManager.checkClipboard()
     }
   }
 
-  private var imageDetectedSection: some View {
+  private var imageReadyCard: some View {
     VStack(spacing: 20) {
-      // Image preview with elegant styling
       if let image = clipboardManager.clipboardImage {
-        Image(uiImage: image)
-          .resizable()
-          .aspectRatio(contentMode: .fit)
-          .frame(maxHeight: 200)
-          .clipShape(RoundedRectangle(cornerRadius: 12))
-          .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-      }
+        // Image preview with Apple card styling
+        VStack(spacing: 16) {
+          Image(uiImage: image)
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .frame(maxHeight: 240)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .background(
+              RoundedRectangle(cornerRadius: 12)
+                .fill(.quaternary)
+            )
 
-      // Generate button with Apple-style design
-      Button(action: {
-        Task {
-          await generateAltText()
-        }
-      }) {
-        HStack(spacing: 12) {
-          if altTextGenerator.isGenerating {
-            ProgressView()
-              .scaleEffect(0.9)
-              .tint(.white)
-          } else {
-            Image(systemName: "sparkles")
-              .font(.title3)
+          VStack(spacing: 8) {
+            Text("Image Ready")
+              .font(.system(size: 22, weight: .semibold))
+              .foregroundStyle(.primary)
+
+            Text("Generate accessible description")
+              .font(.system(size: 16, weight: .regular))
+              .foregroundStyle(.secondary)
+              .multilineTextAlignment(.center)
           }
 
-          Text(altTextGenerator.isGenerating ? "Generating..." : "Generate Alt Text")
-            .font(.headline)
-            .fontWeight(.semibold)
+          // Apple-style action button
+          Button(action: {
+            Task {
+              await generateAltText()
+            }
+          }) {
+            HStack(spacing: 8) {
+              if altTextGenerator.isGenerating {
+                ProgressView()
+                  .scaleEffect(0.9)
+                  .tint(.white)
+              } else {
+                Image(systemName: "sparkles")
+                  .font(.system(size: 16, weight: .semibold))
+              }
+
+              Text(altTextGenerator.isGenerating ? "Analyzing..." : "Generate Description")
+                .font(.system(size: 17, weight: .semibold))
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .background(.blue)
+            .foregroundStyle(.white)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+          }
+          .disabled(altTextGenerator.isGenerating)
+          .scaleEffect(altTextGenerator.isGenerating ? 0.98 : 1.0)
+          .animation(.easeInOut(duration: 0.2), value: altTextGenerator.isGenerating)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
-        .background(.blue, in: RoundedRectangle(cornerRadius: 12))
-        .foregroundStyle(.white)
-        .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
       }
-      .disabled(altTextGenerator.isGenerating)
-      .scaleEffect(altTextGenerator.isGenerating ? 0.98 : 1.0)
-      .animation(.easeInOut(duration: 0.2), value: altTextGenerator.isGenerating)
     }
     .padding(20)
-    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
   }
 
-  private var emptyStateSection: some View {
-    VStack(spacing: 20) {
-      // Beautiful empty state illustration
-      VStack(spacing: 16) {
-        Image(systemName: "clipboard")
-          .font(.system(size: 60))
-          .foregroundStyle(.blue.opacity(0.6))
+  private var monitoringCard: some View {
+    VStack(spacing: 24) {
+      // Apple-style icon
+      ZStack {
+        Circle()
+          .fill(.blue.opacity(0.1))
+          .frame(width: 80, height: 80)
 
-        VStack(spacing: 8) {
-          Text("Copy an image to clipboard")
-            .font(.title3)
-            .fontWeight(.semibold)
-
-          Text("Screenshots, photos, or any image will appear here automatically")
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-            .multilineTextAlignment(.center)
-        }
+        Image(systemName: "doc.on.clipboard")
+          .font(.system(size: 32, weight: .regular))
+          .foregroundStyle(.blue)
       }
-      .padding(.vertical, 40)
 
-      // Quick action buttons
       VStack(spacing: 12) {
-        Button(action: {
-          // Open camera
-        }) {
-          HStack {
-            Image(systemName: "camera.fill")
-            Text("Take Photo")
-          }
-          .frame(maxWidth: .infinity)
-          .padding(.vertical, 12)
-          .background(.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
-          .foregroundStyle(.blue)
-        }
+        Text("Clipboard Monitor")
+          .font(.system(size: 24, weight: .bold))
+          .foregroundStyle(.primary)
 
-        Button(action: {
-          // Open photos
-        }) {
-          HStack {
-            Image(systemName: "photo.on.rectangle")
-            Text("Choose from Photos")
+        Text("Copy any image to automatically generate accessible descriptions")
+          .font(.system(size: 16, weight: .regular))
+          .foregroundStyle(.secondary)
+          .multilineTextAlignment(.center)
+          .lineLimit(3)
+      }
+
+      // Quick actions with Apple styling
+      VStack(spacing: 12) {
+        Text("Quick Actions")
+          .font(.system(size: 18, weight: .semibold))
+          .foregroundStyle(.primary)
+          .frame(maxWidth: .infinity, alignment: .leading)
+
+        HStack(spacing: 12) {
+          quickActionCard(
+            icon: "camera",
+            title: "Take Photo",
+            color: .blue
+          ) {
+            // Camera action
           }
-          .frame(maxWidth: .infinity)
-          .padding(.vertical, 12)
-          .background(.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
-          .foregroundStyle(.blue)
+
+          quickActionCard(
+            icon: "photo.on.rectangle",
+            title: "Choose Photo",
+            color: .green
+          ) {
+            // Photo library action
+          }
         }
       }
     }
-    .padding(20)
-    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+    .padding(24)
+    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
   }
 
-  private func altTextSection(_ altText: String) -> some View {
-    VStack(alignment: .leading, spacing: 16) {
-      // Header with character count
+  private func quickActionCard(
+    icon: String,
+    title: String,
+    color: Color,
+    action: @escaping () -> Void
+  ) -> some View {
+    Button(action: action) {
+      VStack(spacing: 12) {
+        Image(systemName: icon)
+          .font(.system(size: 24, weight: .regular))
+          .foregroundStyle(color)
+
+        Text(title)
+          .font(.system(size: 15, weight: .medium))
+          .foregroundStyle(.primary)
+      }
+      .frame(maxWidth: .infinity)
+      .frame(height: 80)
+      .background(.quaternary, in: RoundedRectangle(cornerRadius: 12))
+    }
+    .buttonStyle(.plain)
+  }
+
+  private func resultCard(_ altText: String) -> some View {
+    VStack(spacing: 16) {
+      // Header
       HStack {
-        Text("Generated Alt Text")
-          .font(.title3)
-          .fontWeight(.semibold)
+        VStack(alignment: .leading, spacing: 4) {
+          Text("Description")
+            .font(.system(size: 20, weight: .semibold))
+            .foregroundStyle(.primary)
+
+          Text("AI-generated accessibility text")
+            .font(.system(size: 14, weight: .regular))
+            .foregroundStyle(.secondary)
+        }
 
         Spacer()
 
-        Text("\(altText.count)/1000")
-          .font(.caption)
-          .foregroundStyle(altText.count > 1000 ? .red : .secondary)
-          .monospacedDigit()
+        Text("\(altText.count)")
+          .font(.system(size: 13, weight: .medium))
+          .foregroundStyle(.secondary)
           .padding(.horizontal, 8)
           .padding(.vertical, 4)
-          .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 6))
+          .background(.quaternary, in: Capsule())
       }
 
-      // Alt text display with elegant styling
+      // Content
       Text(altText)
-        .font(.body)
+        .font(.system(size: 16, weight: .regular))
+        .lineSpacing(4)
         .textSelection(.enabled)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-        .overlay {
-          RoundedRectangle(cornerRadius: 12)
-            .stroke(.blue.opacity(0.2), lineWidth: 1)
-        }
+        .background(.quaternary, in: RoundedRectangle(cornerRadius: 12))
 
-      // Action buttons with perfect spacing
+      // Actions
       HStack(spacing: 12) {
         Button(action: {
           UIPasteboard.general.string = altText
-          // Add haptic feedback
-          let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+          let impactFeedback = UIImpactFeedbackGenerator(style: .light)
           impactFeedback.impactOccurred()
         }) {
-          Label("Copy", systemImage: "doc.on.clipboard")
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(.blue, in: RoundedRectangle(cornerRadius: 10))
-            .foregroundStyle(.white)
+          HStack(spacing: 6) {
+            Image(systemName: "doc.on.clipboard")
+              .font(.system(size: 15, weight: .medium))
+            Text("Copy")
+              .font(.system(size: 16, weight: .semibold))
+          }
+          .frame(maxWidth: .infinity)
+          .frame(height: 44)
+          .background(.blue)
+          .foregroundStyle(.white)
+          .clipShape(RoundedRectangle(cornerRadius: 10))
         }
 
         Button(action: {
           altTextGenerator.clearText()
         }) {
-          Label("Clear", systemImage: "trash")
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(.red.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
-            .foregroundStyle(.red)
+          HStack(spacing: 6) {
+            Image(systemName: "arrow.clockwise")
+              .font(.system(size: 15, weight: .medium))
+            Text("Clear")
+              .font(.system(size: 16, weight: .semibold))
+          }
+          .frame(maxWidth: .infinity)
+          .frame(height: 44)
+          .background(.quaternary)
+          .foregroundStyle(.secondary)
+          .clipShape(RoundedRectangle(cornerRadius: 10))
         }
       }
     }
     .padding(20)
-    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
   }
 
-  private func errorSection(_ error: String) -> some View {
-    VStack(alignment: .leading, spacing: 12) {
-      HStack {
-        Image(systemName: "exclamationmark.triangle.fill")
+  private func errorCard(_ error: String) -> some View {
+    VStack(spacing: 16) {
+      HStack(spacing: 12) {
+        Image(systemName: "exclamationmark.triangle")
+          .font(.system(size: 20, weight: .medium))
           .foregroundStyle(.red)
 
-        Text("Error")
-          .font(.headline)
-          .foregroundStyle(.red)
+        VStack(alignment: .leading, spacing: 4) {
+          Text("Analysis Failed")
+            .font(.system(size: 17, weight: .semibold))
+            .foregroundStyle(.primary)
+
+          Text(error)
+            .font(.system(size: 15, weight: .regular))
+            .foregroundStyle(.secondary)
+        }
 
         Spacer()
       }
 
-      Text(error)
-        .font(.subheadline)
-        .foregroundStyle(.secondary)
-
       Button(action: {
         altTextGenerator.clearText()
       }) {
-        Text("Dismiss")
+        Text("Try Again")
+          .font(.system(size: 16, weight: .semibold))
           .frame(maxWidth: .infinity)
-          .padding(.vertical, 12)
-          .background(.red.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+          .frame(height: 44)
+          .background(.red.opacity(0.1))
           .foregroundStyle(.red)
+          .clipShape(RoundedRectangle(cornerRadius: 10))
       }
     }
     .padding(20)
-    .background(.red.opacity(0.05), in: RoundedRectangle(cornerRadius: 16))
-    .overlay {
-      RoundedRectangle(cornerRadius: 16)
-        .stroke(.red.opacity(0.2), lineWidth: 1)
-    }
+    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
   }
 
   private func generateAltText() async {
