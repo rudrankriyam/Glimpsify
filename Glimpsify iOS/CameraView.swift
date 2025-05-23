@@ -7,6 +7,7 @@
 
 import AVFoundation
 import SwiftUI
+import UIKit
 
 struct CameraView: View {
   @Environment(CameraManager.self) private var cameraManager
@@ -46,9 +47,15 @@ struct CameraView: View {
     }
     .background(.black)
     .task {
-      _ = await cameraManager.requestPermission()
-      await cameraManager.setupCamera()
-      cameraManager.startSession()
+      await setupCamera()
+    }
+    .onAppear {
+      if cameraManager.isAuthorized && !cameraManager.isSessionRunning {
+        cameraManager.startSession()
+      }
+    }
+    .onDisappear {
+      cameraManager.stopSession()
     }
     .sheet(isPresented: $showingImagePicker) {
       ImagePicker(image: $capturedImage)
@@ -57,6 +64,16 @@ struct CameraView: View {
       if let image = capturedImage {
         CaptureResultView(image: image, isAnalyzing: $isCapturing)
           .environment(altTextGenerator)
+      }
+    }
+  }
+
+  private func setupCamera() async {
+    let granted = await cameraManager.requestPermission()
+    if granted {
+      await cameraManager.setupCamera()
+      await MainActor.run {
+        cameraManager.startSession()
       }
     }
   }
@@ -218,17 +235,11 @@ struct CameraView: View {
 // MARK: - Camera Preview View
 struct CameraPreviewView: UIViewRepresentable {
   let cameraManager: CameraManager
+  @State private var lastFrameUpdate = Date()
 
   func makeUIView(context: Context) -> UIView {
     let view = UIView()
     view.backgroundColor = .black
-
-    if let previewLayer = cameraManager.previewLayer {
-      previewLayer.frame = view.bounds
-      previewLayer.videoGravity = .resizeAspectFill
-      view.layer.addSublayer(previewLayer)
-    }
-
     return view
   }
 
@@ -236,8 +247,23 @@ struct CameraPreviewView: UIViewRepresentable {
     // Ensure black background is maintained
     uiView.backgroundColor = .black
 
+    // Remove any existing preview layers
+    uiView.layer.sublayers?.forEach { layer in
+      if layer is AVCaptureVideoPreviewLayer {
+        layer.removeFromSuperlayer()
+      }
+    }
+
+    // Add the current preview layer if available
     if let previewLayer = cameraManager.previewLayer {
       previewLayer.frame = uiView.bounds
+      previewLayer.videoGravity = .resizeAspectFill
+      uiView.layer.addSublayer(previewLayer)
+
+      // Force a layout update
+      DispatchQueue.main.async {
+        previewLayer.frame = uiView.bounds
+      }
     }
   }
 }

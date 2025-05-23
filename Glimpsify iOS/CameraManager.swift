@@ -84,6 +84,11 @@ class CameraManager: NSObject {
 
       session.beginConfiguration()
 
+      // Set session preset for better quality
+      if session.canSetSessionPreset(.photo) {
+        session.sessionPreset = .photo
+      }
+
       if session.canAddInput(input) {
         session.addInput(input)
       } else {
@@ -103,6 +108,14 @@ class CameraManager: NSObject {
         captureSession = session
         photoOutput = output
         currentCameraInput = input
+
+        // Create preview layer immediately after session setup
+        if videoPreviewLayer == nil {
+          videoPreviewLayer = AVCaptureVideoPreviewLayer(session: session)
+          videoPreviewLayer?.videoGravity = .resizeAspectFill
+        } else {
+          videoPreviewLayer?.session = session
+        }
       }
 
     } catch {
@@ -116,7 +129,9 @@ class CameraManager: NSObject {
     guard let session = captureSession else { return }
 
     DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-      session.startRunning()
+      if !session.isRunning {
+        session.startRunning()
+      }
 
       DispatchQueue.main.async {
         self?.isSessionRunning = session.isRunning
@@ -128,7 +143,9 @@ class CameraManager: NSObject {
     guard let session = captureSession else { return }
 
     DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-      session.stopRunning()
+      if session.isRunning {
+        session.stopRunning()
+      }
 
       DispatchQueue.main.async {
         self?.isSessionRunning = false
@@ -270,9 +287,16 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
       return
     }
 
-    guard let imageData = photo.fileDataRepresentation(),
-      let image = UIImage(data: imageData)
-    else {
+    guard let imageData = photo.fileDataRepresentation() else {
+      DispatchQueue.main.async {
+        self.error = .imageProcessingFailed
+        self.captureCompletion?(nil)
+        self.captureCompletion = nil
+      }
+      return
+    }
+
+    guard let image = UIImage(data: imageData) else {
       DispatchQueue.main.async {
         self.error = .imageProcessingFailed
         self.captureCompletion?(nil)
