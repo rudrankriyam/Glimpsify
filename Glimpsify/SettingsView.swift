@@ -123,27 +123,19 @@ struct SettingsView: View {
 
 enum APIProvider: String, CaseIterable, Codable {
   case groq = "groq"
-  case openAI = "openai"
-  case claude = "claude"
 
   var displayName: String {
     switch self {
     case .groq: return "Groq"
-    case .openAI: return "OpenAI GPT-4"
-    case .claude: return "Anthropic Claude"
     }
   }
 
-  var instructionText: String {
-    switch self {
-    case .groq:
-      return "Get your free API key from console.groq.com"
-    case .openAI:
-      return "Get your API key from platform.openai.com"
-    case .claude:
-      return "Get your API key from console.anthropic.com"
+    var instructionText: String {
+        switch self {
+        case .groq:
+            return "Get your free API key from console.groq.com"
+        }
     }
-  }
 
   var keychainKey: String {
     return "glimpsify_\(rawValue)_api_key"
