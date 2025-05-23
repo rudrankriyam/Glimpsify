@@ -16,7 +16,7 @@ This guide explains how to set up code signing and notarization for Glimpsify in
 4. Follow the instructions to create a Certificate Signing Request (CSR)
 5. Download the certificate (.cer file)
 6. Double-click to install it in Keychain Access
-
+key
 ## Step 2: Export Certificate for GitHub Actions
 
 1. Open Keychain Access
