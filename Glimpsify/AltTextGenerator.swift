@@ -98,7 +98,7 @@ class KeychainManager {
 
   func saveAPIKey(_ key: String, for provider: APIProvider) {
     guard let data = key.data(using: .utf8) else {
-      return // Failed to encode key
+      return  // Failed to encode key
     }
 
     let query: [String: Any] = [
@@ -147,7 +147,7 @@ class KeychainManager {
   // Additional methods for direct key access (used by SettingsView)
   func save(key: String, value: String) -> Bool {
     guard let data = value.data(using: .utf8) else {
-      return false // Failed to encode value
+      return false  // Failed to encode value
     }
 
     let query: [String: Any] = [
