@@ -33,15 +33,6 @@ jobs:
           p12-file-base64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
           p12-password: ${{ secrets.P12_PASSWORD }}
 
-      - name: Download Provisioning Profiles
-        if: github.event_name != 'pull_request'
-        uses: Apple-Actions/download-provisioning-profiles@v1
-        with:
-          bundle-id: com.rudrankriyam.Glimpsify
-          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
-          api-key-id: ${{ secrets.APPSTORE_KEY_ID }}
-          api-private-key: ${{ secrets.APPSTORE_PRIVATE_KEY }}
-
       - name: Create ExportOptions.plist (Signed)
         if: github.event_name != 'pull_request'
         run: |
