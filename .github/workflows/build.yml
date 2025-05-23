@@ -102,18 +102,56 @@ jobs:
       - name: Notarize app
         if: github.event_name != 'pull_request'
         run: |
+          set -e # Ensure script exits immediately if a command exits with a non-zero status.
+
           # Create a zip file for notarization
+          echo "Creating zip for notarization..."
           ditto -c -k --keepParent ./Glimpsify.app Glimpsify.zip
+          echo "Zip created."
 
-          # Submit for notarization
-          xcrun notarytool submit Glimpsify.zip \
-            --apple-id "${{ secrets.NOTARIZATION_APPLE_ID }}" \
-            --password "${{ secrets.NOTARIZATION_PASSWORD }}" \
-            --team-id "${{ secrets.TEAM_ID }}" \
-            --wait
+          # Submit for notarization and capture output
+          echo "Submitting for notarization..."
+          SUBMISSION_OUTPUT_FILE="submission_output.txt"
+          # Run submit command, allow it to 'fail' if status is Invalid, and save all output
+          xcrun notarytool submit Glimpsify.zip \\
+            --apple-id "${{ secrets.NOTARIZATION_APPLE_ID }}" \\
+            --password "${{ secrets.NOTARIZATION_PASSWORD }}" \\
+            --team-id "${{ secrets.TEAM_ID }}" \\
+            --wait > "$SUBMISSION_OUTPUT_FILE" 2>&1 || true
 
+          echo "--- Full submission command output from notarytool ---"
+          cat "$SUBMISSION_OUTPUT_FILE"
+          echo "--- End of submission command output ---"
+
+          # Extract Submission ID (first one found) and Status (last one found)
+          SUBMISSION_ID=$(grep -oE 'id: [0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}' "$SUBMISSION_OUTPUT_FILE" | awk '{print $2}' | head -n 1)
+          STATUS=$(grep -oE 'status: [a-zA-Z]+' "$SUBMISSION_OUTPUT_FILE" | awk '{print $2}' | tail -n 1)
+
+          echo "Extracted Submission ID: ${SUBMISSION_ID}"
+          echo "Extracted Status: ${STATUS}"
+
+          if [ -n "$SUBMISSION_ID" ]; then
+            echo "Fetching notarization log for ID: $SUBMISSION_ID..."
+            # Fetch the log
+            xcrun notarytool log "$SUBMISSION_ID" \\
+              --apple-id "${{ secrets.NOTARIZATION_APPLE_ID }}" \\
+              --password "${{ secrets.NOTARIZATION_PASSWORD }}" \\
+              --team-id "${{ secrets.TEAM_ID }}"
+          else
+            echo "Could not extract Submission ID from the notarytool output. Cannot fetch detailed log."
+          fi
+
+          # Check status and fail explicitly if not successful
+          # Apple's notary service might return "Accepted" or "Success" for a positive outcome.
+          if [ "$STATUS" != "Accepted" ] && [ "$STATUS" != "Success" ]; then
+            echo "Notarization failed with status: $STATUS. Please check the log above for details."
+            exit 1
+          fi
+
+          echo "Notarization successful (Status: $STATUS). Proceeding to staple..."
           # Staple the notarization
           xcrun stapler staple ./Glimpsify.app
+          echo "Stapling complete."
 
       - name: Create DMG
         run: |
