@@ -36,99 +36,28 @@ struct ContentView: View {
   }
 
   var body: some View {
-    ZStack {
-      // Pure Apple background
-      Color(.systemGroupedBackground)
-        .ignoresSafeArea()
-
-      VStack(spacing: 0) {
-        // Apple-style header
-        headerSection
-
-        // Main content with Apple transitions
-        TabView(selection: $selectedTab) {
-          ForEach(Tab.allCases, id: \.self) { tab in
-            contentView(for: tab)
-              .tag(tab)
+    TabView(selection: $selectedTab) {
+      ForEach(Tab.allCases, id: \.self) { tab in
+        contentView(for: tab)
+          .tabItem {
+            Image(systemName: selectedTab == tab ? tab.selectedIcon : tab.icon)
+            Text(tab.rawValue)
           }
-        }
-        .tabViewStyle(.page(indexDisplayMode: .never))
-        .animation(.easeInOut(duration: 0.3), value: selectedTab)
+          .tag(tab)
       }
+    }
+    .onAppear {
+      // Make tab bar opaque
+      let appearance = UITabBarAppearance()
+      appearance.configureWithOpaqueBackground()
+      appearance.backgroundColor = UIColor.systemBackground
+
+      UITabBar.appearance().standardAppearance = appearance
+      UITabBar.appearance().scrollEdgeAppearance = appearance
     }
     .sheet(isPresented: $showingSettings) {
       SettingsView()
     }
-  }
-
-  private var headerSection: some View {
-    VStack(spacing: 0) {
-      // Top navigation bar
-      HStack {
-        // App title with Apple typography
-        VStack(alignment: .leading, spacing: 2) {
-          Text("Glimpsify")
-            .font(.system(size: 28, weight: .bold, design: .default))
-            .foregroundStyle(.primary)
-
-          Text("Accessibility made simple")
-            .font(.system(size: 15, weight: .medium))
-            .foregroundStyle(.secondary)
-        }
-
-        Spacer()
-
-        // Settings button with Apple styling
-        Button(action: { showingSettings = true }) {
-          Image(systemName: "ellipsis.circle")
-            .font(.system(size: 20, weight: .medium))
-            .foregroundStyle(.secondary)
-        }
-      }
-      .padding(.horizontal, 20)
-      .padding(.top, 8)
-      .padding(.bottom, 20)
-
-      // Apple-style segmented control
-      customSegmentedControl
-        .padding(.horizontal, 20)
-        .padding(.bottom, 16)
-    }
-    .background(.regularMaterial)
-  }
-
-  private var customSegmentedControl: some View {
-    HStack(spacing: 0) {
-      ForEach(Tab.allCases, id: \.self) { tab in
-        Button(action: {
-          withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-            selectedTab = tab
-          }
-        }) {
-          HStack(spacing: 6) {
-            Image(systemName: selectedTab == tab ? tab.selectedIcon : tab.icon)
-              .font(.system(size: 16, weight: .medium))
-              .foregroundStyle(selectedTab == tab ? .white : .secondary)
-
-            Text(tab.rawValue)
-              .font(.system(size: 15, weight: .semibold))
-              .foregroundStyle(selectedTab == tab ? .white : .secondary)
-          }
-          .frame(maxWidth: .infinity)
-          .padding(.vertical, 10)
-          .background(
-            RoundedRectangle(cornerRadius: 8)
-              .fill(selectedTab == tab ? .blue : .clear)
-          )
-        }
-        .buttonStyle(.plain)
-      }
-    }
-    .padding(3)
-    .background(
-      RoundedRectangle(cornerRadius: 11)
-        .fill(.quaternary)
-    )
   }
 
   @ViewBuilder
@@ -138,6 +67,13 @@ struct ContentView: View {
       CameraView()
     case .photos:
       PhotosView()
+        .toolbar {
+          ToolbarItem(placement: .navigationBarTrailing) {
+            Button(action: { showingSettings = true }) {
+              Image(systemName: "gear")
+            }
+          }
+        }
     case .clipboard:
       ClipboardView()
     }

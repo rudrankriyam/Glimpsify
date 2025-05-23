@@ -19,33 +19,30 @@ struct CameraView: View {
   @State private var isCapturing = false
 
   var body: some View {
-    GeometryReader { geometry in
-      ZStack {
-        // Black background
-        Color.black
-          .ignoresSafeArea(.all)
+    ZStack {
+      // Black background that fills the safe area but respects tab bar
+      Color.black
+        .ignoresSafeArea(.all, edges: [.top, .leading, .trailing])
 
-        // Camera preview
-        cameraPreview
-          .ignoresSafeArea(.all)
+      // Camera preview
+      cameraPreview
+        .ignoresSafeArea(.all, edges: [.top, .leading, .trailing])
 
-        // Minimalistic overlay controls
-        VStack {
-          // Top minimal controls
-          topControls
-            .padding(.horizontal, 24)
-            .padding(.top, 16)
+      // Minimalistic overlay controls
+      VStack {
+        // Top minimal controls
+        topControls
+          .padding(.horizontal, 24)
+          .padding(.top, 16)
 
-          Spacer()
+        Spacer()
 
-          // Bottom capture controls
-          bottomControls
-            .padding(.horizontal, 24)
-            .padding(.bottom, max(34, geometry.safeAreaInsets.bottom + 20))
-        }
+        // Bottom capture controls
+        bottomControls
+          .padding(.horizontal, 24)
+          .padding(.bottom, 34)
       }
     }
-    .background(.black)
     .task {
       await setupCamera()
     }
