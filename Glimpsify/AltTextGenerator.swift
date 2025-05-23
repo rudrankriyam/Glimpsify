@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Security
 import SwiftUI
 
 @Observable
@@ -21,7 +22,7 @@ class AltTextGenerator {
 
         do {
             let base64Image = image.base64String()
-            let altText = try await callVisionAPI(base64Image: base64Image)
+            let altText = try await callGroqAPI(base64Image: base64Image)
 
             generatedText = altText
             isGenerating = false
@@ -37,22 +38,11 @@ class AltTextGenerator {
         error = nil
     }
 
-    private func callVisionAPI(base64Image: String) async throws -> String {
-        let provider = UserDefaults.standard.object(forKey: "apiProvider") as? String ?? "groq"
-        let apiProvider = APIProvider(rawValue: provider) ?? .groq
-
-        guard let apiKey = KeychainManager.shared.getAPIKey(for: apiProvider) else {
-            throw AltTextError.missingAPIKey(apiProvider)
+    private func callGroqAPI(base64Image: String) async throws -> String {
+        guard let apiKey = KeychainManager.shared.getAPIKey(for: .groq) else {
+            throw AltTextError.missingAPIKey
         }
 
-        switch apiProvider {
-        case .groq:
-            return try await callGroqAPI(base64Image: base64Image, apiKey: apiKey)
-        }
-    }
-
-    // MARK: - Groq API
-    private func callGroqAPI(base64Image: String, apiKey: String) async throws -> String {
         let url = URL(string: "https://api.groq.com/openai/v1/chat/completions")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -115,14 +105,14 @@ class AltTextGenerator {
 
 // MARK: - Error Types
 enum AltTextError: LocalizedError {
-    case missingAPIKey(APIProvider)
+    case missingAPIKey
     case invalidResponse
     case apiError(Int, String)
 
     var errorDescription: String? {
         switch self {
-        case .missingAPIKey(let provider):
-            return "\(provider.displayName) API key not found. Please set it in Settings."
+        case .missingAPIKey:
+            return "Groq API key not found. Please set it in Settings."
         case .invalidResponse:
             return "Invalid response from API"
         case .apiError(let code, let message):
@@ -133,7 +123,6 @@ enum AltTextError: LocalizedError {
 
 // MARK: - API Response Models
 
-// Groq Response (same as OpenAI format)
 struct GroqResponse: Codable {
     let choices: [GroqChoice]
 }
@@ -146,25 +135,71 @@ struct GroqMessage: Codable {
     let content: String?
 }
 
-// OpenAI Response
-struct OpenAIResponse: Codable {
-    let choices: [Choice]
+// MARK: - Types (shared with SettingsView)
+
+enum APIProvider: String, CaseIterable, Codable {
+    case groq = "groq"
+
+    var displayName: String {
+        switch self {
+        case .groq: return "Groq"
+        }
+    }
+
+    var keychainKey: String {
+        return "glimpsify_\(rawValue)_api_key"
+    }
 }
 
-struct Choice: Codable {
-    let message: Message
-}
+// MARK: - Keychain Manager (shared with SettingsView)
 
-struct Message: Codable {
-    let content: String?
-}
+class KeychainManager {
+    static let shared = KeychainManager()
+    private init() {}
 
-// Claude Response
-struct ClaudeResponse: Codable {
-    let content: [ClaudeContent]
-}
+    func saveAPIKey(_ key: String, for provider: APIProvider) {
+        let data = key.data(using: .utf8)!
 
-struct ClaudeContent: Codable {
-    let text: String?
-    let type: String
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: provider.keychainKey,
+            kSecValueData as String: data,
+        ]
+
+        // Delete existing item
+        SecItemDelete(query as CFDictionary)
+
+        // Add new item
+        SecItemAdd(query as CFDictionary, nil)
+    }
+
+    func getAPIKey(for provider: APIProvider) -> String? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: provider.keychainKey,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne,
+        ]
+
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+
+        guard status == errSecSuccess,
+              let data = result as? Data,
+              let key = String(data: data, encoding: .utf8)
+        else {
+            return nil
+        }
+
+        return key
+    }
+
+    func deleteAPIKey(for provider: APIProvider) {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: provider.keychainKey,
+        ]
+
+        SecItemDelete(query as CFDictionary)
+    }
 }

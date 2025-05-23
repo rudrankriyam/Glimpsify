@@ -16,24 +16,15 @@ struct SettingsView: View {
   @State private var apiKey: String = ""
   @State private var showingAPIKeyAlert = false
   @State private var apiKeyStatus: APIKeyStatus = .notSet
+  @State private var isValidating = false
+  @State private var validationMessage = ""
 
   var body: some View {
     Form {
       Section("API Configuration") {
-        Picker("Provider", selection: $apiProvider) {
-          ForEach(APIProvider.allCases, id: \.self) { provider in
-            Text(provider.displayName)
-              .tag(provider)
-          }
-        }
-        .pickerStyle(.menu)
-        .onChange(of: apiProvider) { _, newValue in
-          loadAPIKey()
-        }
-
         VStack(alignment: .leading, spacing: 8) {
           HStack {
-            Text("\(apiProvider.displayName) API Key")
+            Text("Groq API Key")
               .font(.headline)
 
             Spacer()
@@ -52,12 +43,26 @@ struct SettingsView: View {
               .textFieldStyle(.roundedBorder)
 
             Button("Save") {
-              saveAPIKey()
+              Task {
+                await saveAndValidateAPIKey()
+              }
             }
-            .disabled(apiKey.isEmpty)
+            .disabled(apiKey.isEmpty || isValidating)
+            .overlay {
+              if isValidating {
+                ProgressView()
+                  .scaleEffect(0.7)
+              }
+            }
           }
 
-          Text(apiProvider.instructionText)
+          if !validationMessage.isEmpty {
+            Text(validationMessage)
+              .font(.caption)
+              .foregroundStyle(apiKeyStatus == .valid ? .green : .red)
+          }
+
+          Text("Get your free API key from console.groq.com")
             .font(.caption)
             .foregroundStyle(.secondary)
         }
@@ -100,7 +105,7 @@ struct SettingsView: View {
     .alert("API Key Saved", isPresented: $showingAPIKeyAlert) {
       Button("OK") {}
     } message: {
-      Text("Your API key has been securely saved to the keychain.")
+      Text("Your API key has been securely saved and validated.")
     }
   }
 
@@ -108,37 +113,67 @@ struct SettingsView: View {
     if let savedKey = KeychainManager.shared.getAPIKey(for: apiProvider) {
       apiKey = savedKey
       apiKeyStatus = .valid
+      validationMessage = "Previously validated"
     } else {
       apiKey = ""
       apiKeyStatus = .notSet
+      validationMessage = ""
     }
   }
 
-  private func saveAPIKey() {
-    KeychainManager.shared.saveAPIKey(apiKey, for: apiProvider)
-    apiKeyStatus = .valid
-    showingAPIKeyAlert = true
-  }
-}
+  private func saveAndValidateAPIKey() async {
+    isValidating = true
+    validationMessage = "Validating..."
 
-enum APIProvider: String, CaseIterable, Codable {
-  case groq = "groq"
+    // Test the API key
+    let isValid = await validateGroqKey(apiKey)
 
-  var displayName: String {
-    switch self {
-    case .groq: return "Groq"
-    }
-  }
-
-    var instructionText: String {
-        switch self {
-        case .groq:
-            return "Get your free API key from console.groq.com"
-        }
+    if isValid {
+      KeychainManager.shared.saveAPIKey(apiKey, for: apiProvider)
+      apiKeyStatus = .valid
+      validationMessage = "✓ API key is valid and working"
+      showingAPIKeyAlert = true
+    } else {
+      apiKeyStatus = .invalid
+      validationMessage = "✗ API key validation failed"
     }
 
-  var keychainKey: String {
-    return "glimpsify_\(rawValue)_api_key"
+    isValidating = false
+  }
+
+  private func validateGroqKey(_ key: String) async -> Bool {
+    do {
+      let url = URL(string: "https://api.groq.com/openai/v1/chat/completions")!
+      var request = URLRequest(url: url)
+      request.httpMethod = "POST"
+      request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+      request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+      let payload: [String: Any] = [
+        "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+        "messages": [
+          [
+            "role": "user",
+            "content": "Hello, this is a test message.",
+          ]
+        ],
+        "max_completion_tokens": 10,
+        "temperature": 0.1,
+      ]
+
+      request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+      let (_, response) = try await URLSession.shared.data(for: request)
+
+      guard let httpResponse = response as? HTTPURLResponse else {
+        return false
+      }
+
+      return httpResponse.statusCode == 200
+    } catch {
+      print("Validation error: \(error)")
+      return false
+    }
   }
 }
 
@@ -150,7 +185,7 @@ enum APIKeyStatus {
   var text: String {
     switch self {
     case .notSet: return "Not Set"
-    case .valid: return "Set"
+    case .valid: return "Valid"
     case .invalid: return "Invalid"
     }
   }
@@ -161,58 +196,6 @@ enum APIKeyStatus {
     case .valid: return .green
     case .invalid: return .red
     }
-  }
-}
-
-// MARK: - Keychain Manager
-class KeychainManager {
-  static let shared = KeychainManager()
-  private init() {}
-
-  func saveAPIKey(_ key: String, for provider: APIProvider) {
-    let data = key.data(using: .utf8)!
-
-    let query: [String: Any] = [
-      kSecClass as String: kSecClassGenericPassword,
-      kSecAttrAccount as String: provider.keychainKey,
-      kSecValueData as String: data,
-    ]
-
-    // Delete existing item
-    SecItemDelete(query as CFDictionary)
-
-    // Add new item
-    SecItemAdd(query as CFDictionary, nil)
-  }
-
-  func getAPIKey(for provider: APIProvider) -> String? {
-    let query: [String: Any] = [
-      kSecClass as String: kSecClassGenericPassword,
-      kSecAttrAccount as String: provider.keychainKey,
-      kSecReturnData as String: true,
-      kSecMatchLimit as String: kSecMatchLimitOne,
-    ]
-
-    var result: AnyObject?
-    let status = SecItemCopyMatching(query as CFDictionary, &result)
-
-    guard status == errSecSuccess,
-      let data = result as? Data,
-      let key = String(data: data, encoding: .utf8)
-    else {
-      return nil
-    }
-
-    return key
-  }
-
-  func deleteAPIKey(for provider: APIProvider) {
-    let query: [String: Any] = [
-      kSecClass as String: kSecClassGenericPassword,
-      kSecAttrAccount as String: provider.keychainKey,
-    ]
-
-    SecItemDelete(query as CFDictionary)
   }
 }
 
