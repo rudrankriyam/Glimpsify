@@ -7,10 +7,29 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		0A992F862DE09547008DAAE9 /* Glimpsify iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Glimpsify iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AC5BD302DE028D1004F8008 /* Glimpsify.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Glimpsify.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		0A992F922DE09550008DAAE9 /* Exceptions for "Glimpsify iOS" folder in "Glimpsify iOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				README.md,
+			);
+			target = 0A992F852DE09547008DAAE9 /* Glimpsify iOS */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		0A992F872DE09547008DAAE9 /* Glimpsify iOS */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				0A992F922DE09550008DAAE9 /* Exceptions for "Glimpsify iOS" folder in "Glimpsify iOS" target */,
+			);
+			path = "Glimpsify iOS";
+			sourceTree = "<group>";
+		};
 		0AC5BD322DE028D1004F8008 /* Glimpsify */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Glimpsify;
@@ -19,6 +38,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		0A992F832DE09547008DAAE9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0AC5BD2D2DE028D1004F8008 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -33,6 +59,7 @@
 			isa = PBXGroup;
 			children = (
 				0AC5BD322DE028D1004F8008 /* Glimpsify */,
+				0A992F872DE09547008DAAE9 /* Glimpsify iOS */,
 				0AC5BD312DE028D1004F8008 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +68,7 @@
 			isa = PBXGroup;
 			children = (
 				0AC5BD302DE028D1004F8008 /* Glimpsify.app */,
+				0A992F862DE09547008DAAE9 /* Glimpsify iOS.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +76,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		0A992F852DE09547008DAAE9 /* Glimpsify iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0A992F8E2DE09549008DAAE9 /* Build configuration list for PBXNativeTarget "Glimpsify iOS" */;
+			buildPhases = (
+				0A992F822DE09547008DAAE9 /* Sources */,
+				0A992F832DE09547008DAAE9 /* Frameworks */,
+				0A992F842DE09547008DAAE9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				0A992F872DE09547008DAAE9 /* Glimpsify iOS */,
+			);
+			name = "Glimpsify iOS";
+			packageProductDependencies = (
+			);
+			productName = "Glimpsify iOS";
+			productReference = 0A992F862DE09547008DAAE9 /* Glimpsify iOS.app */;
+			productType = "com.apple.product-type.application";
+		};
 		0AC5BD2F2DE028D1004F8008 /* Glimpsify */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0AC5BD3C2DE028D3004F8008 /* Build configuration list for PBXNativeTarget "Glimpsify" */;
@@ -80,6 +130,9 @@
 				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
+					0A992F852DE09547008DAAE9 = {
+						CreatedOnToolsVersion = 16.4;
+					};
 					0AC5BD2F2DE028D1004F8008 = {
 						CreatedOnToolsVersion = 16.4;
 					};
@@ -100,11 +153,19 @@
 			projectRoot = "";
 			targets = (
 				0AC5BD2F2DE028D1004F8008 /* Glimpsify */,
+				0A992F852DE09547008DAAE9 /* Glimpsify iOS */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		0A992F842DE09547008DAAE9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0AC5BD2E2DE028D1004F8008 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -115,6 +176,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		0A992F822DE09547008DAAE9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0AC5BD2C2DE028D1004F8008 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -125,6 +193,77 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		0A992F8F2DE09549008DAAE9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YQZQG7N4WG;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.rudrankriyam.Glimpsify-iOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		0A992F902DE09549008DAAE9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YQZQG7N4WG;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.rudrankriyam.Glimpsify-iOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		0AC5BD3A2DE028D3004F8008 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -312,6 +451,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0A992F8E2DE09549008DAAE9 /* Build configuration list for PBXNativeTarget "Glimpsify iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A992F8F2DE09549008DAAE9 /* Debug */,
+				0A992F902DE09549008DAAE9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		0AC5BD2B2DE028D1004F8008 /* Build configuration list for PBXProject "Glimpsify" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
