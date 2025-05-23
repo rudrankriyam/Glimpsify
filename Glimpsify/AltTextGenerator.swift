@@ -245,6 +245,8 @@ class AltTextGenerator {
                 - Colors, composition, or mood if significant
 
                 Be specific but concise. Avoid starting with "This image shows" or similar phrases.
+
+                IMPORTANT: Return only the alt text without any quotes, formatting, or additional text.
                 """,
               imageUrl: nil
             ),
@@ -288,7 +290,13 @@ class AltTextGenerator {
       throw AltTextError.invalidResponse
     }
 
-    return choice.message.content.trimmingCharacters(in: .whitespacesAndNewlines)
+    // Clean up the response by removing quotes and extra whitespace
+    let cleanedContent = choice.message.content
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+      .trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+
+    return cleanedContent
   }
 
   // MARK: - API Key Validation
