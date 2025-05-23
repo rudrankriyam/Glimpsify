@@ -10,5 +10,7 @@
 	<true/>
 	<key>com.apple.security.device.clipboard</key>
 	<true/>
+	<key>com.apple.security.get-task-allow</key>
+	<false/>
 </dict>
 </plist>

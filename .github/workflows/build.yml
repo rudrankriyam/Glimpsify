@@ -80,7 +80,8 @@ jobs:
             -configuration Release \
             -derivedDataPath ./build \
             CODE_SIGN_IDENTITY="Developer ID Application" \
-            DEVELOPMENT_TEAM="${{ secrets.TEAM_ID }}"
+            DEVELOPMENT_TEAM="${{ secrets.TEAM_ID }}" \
+            OTHER_CODE_SIGN_FLAGS="--timestamp"
 
       - name: Build app (Unsigned - for PRs)
         if: github.event_name == 'pull_request'
