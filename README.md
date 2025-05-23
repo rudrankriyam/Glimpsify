@@ -25,23 +25,16 @@ A macOS menu bar app that generates descriptive alt text for images!
 - macOS 14.0+
 - Groq API key (free at console.groq.com)
 
-## Setup
+## Installation
 
-### Get a Groq API Key
+### Download from Releases
 
-1. Visit [Groq Console](https://console.groq.com)
-2. Sign up for a free account
-3. Create a new API key
+1. Go to the [Releases page](https://github.com/rudrankriyam/Glimpsify/releases)
+2. Download the latest `Glimpsify.dmg` file
+3. Open the DMG and drag Glimpsify.app to your Applications folder
+4. Launch from Applications or Spotlight
 
-### Configure the App
-
-1. Build and run the app
-2. Click the Glimpsify menu bar icon
-3. Go to Settings
-4. Enter your API key and click "Save"
-5. The app will validate your key automatically
-
-## Building
+### Build from Source
 
 1. Clone the repository
    ```bash
@@ -55,6 +48,22 @@ A macOS menu bar app that generates descriptive alt text for images!
    ```
 
 3. Build and run (⌘+R)
+
+## Setup
+
+### Get a Groq API Key
+
+1. Visit [Groq Console](https://console.groq.com)
+2. Sign up for a free account
+3. Create a new API key
+
+### Configure the App
+
+1. Launch Glimpsify
+2. Click the Glimpsify menu bar icon
+3. Go to Settings
+4. Enter your API key and click "Save"
+5. The app will validate your key automatically
 
 ## Usage
 
@@ -75,6 +84,45 @@ Access settings through the menu bar app to configure:
 - **API Key Management**: Securely store and validate your Groq API key
 - **Maximum Character Count**: Customize output length
 - **Auto-generation**: Enable automatic alt text generation
+
+## Development
+
+Built with:
+
+- SwiftUI for modern macOS UI
+- `@Observable` for state management
+- MenuBarExtra for menu bar integration
+- Security framework for Keychain integration
+- Groq API for AI vision processing
+
+## GitHub Actions
+
+This project includes automated building and releasing:
+
+### Automatic Builds
+
+- **On every push to main**: Builds the app and uploads artifacts
+- **On pull requests**: Validates that the app builds successfully
+- **On tags**: Creates a release with DMG file
+
+### Creating a Release
+
+1. **Using the release script** (recommended):
+   ```bash
+   ./scripts/release.sh 1.0.0
+   ```
+
+2. **Manual process**:
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+The GitHub Actions workflow will automatically:
+- Build the app in Release configuration
+- Create a DMG file
+- Upload artifacts
+- Create a GitHub release (for tags)
 
 ## API Limits
 
