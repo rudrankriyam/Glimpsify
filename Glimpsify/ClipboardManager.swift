@@ -22,7 +22,8 @@ class ClipboardManager {
     }
 
     private func startMonitoring() {
-        timer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: true) { _ in
+        // Increase the polling interval to 1 second to reduce CPU usage while maintaining responsiveness.
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             Task {
                 self.checkClipboard()
             }
