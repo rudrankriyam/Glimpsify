@@ -41,4 +41,20 @@ extension NSImage {
 
         return jpegData.base64EncodedString()
     }
+    
+    // Compare two NSImages for equality based on their data representation
+    func isEqual(_ other: NSImage?) -> Bool {
+        guard let other = other else { return false }
+        
+        // Quick size comparison first (optimization)
+        if self.size != other.size { return false }
+        
+        // Compare data representation
+        guard let selfData = self.tiffRepresentation,
+              let otherData = other.tiffRepresentation else {
+            return false
+        }
+        
+        return selfData == otherData
+    }
 }
