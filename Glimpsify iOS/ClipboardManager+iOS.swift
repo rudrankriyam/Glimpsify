@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 @Observable
 class ClipboardManager {
@@ -22,7 +23,7 @@ class ClipboardManager {
   }
 
   private func startMonitoring() {
-    timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+    timer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: true) { _ in
       Task { @MainActor in
         self.checkClipboard()
       }
@@ -31,17 +32,26 @@ class ClipboardManager {
 
   func checkClipboard() {
     let pasteboard = UIPasteboard.general
-
-    if pasteboard.changeCount != lastChangeCount {
+    
+    // Check if the change count has changed
+    let changeCountChanged = pasteboard.changeCount != lastChangeCount
+    if changeCountChanged {
       lastChangeCount = pasteboard.changeCount
-
+    }
+    
+    // Always check for image content (handles Universal Clipboard from macOS devices)
+    if pasteboard.hasImages {
       if let image = pasteboard.image {
-        clipboardImage = image
-        hasImage = true
-      } else {
-        clipboardImage = nil
-        hasImage = false
+        // Only update if the image has changed or change count changed
+        if changeCountChanged || clipboardImage == nil || !clipboardImage!.hasSameImageData(as: image) {
+          clipboardImage = image
+          hasImage = true
+        }
       }
+    } else if hasImage {
+      // Only clear if we previously had an image
+      clipboardImage = nil
+      hasImage = false
     }
   }
 

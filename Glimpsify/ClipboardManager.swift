@@ -22,7 +22,8 @@ class ClipboardManager {
     }
 
     private func startMonitoring() {
-        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+        // Increase the polling interval to 1 second to reduce CPU usage while maintaining responsiveness.
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             Task {
                 self.checkClipboard()
             }
@@ -31,17 +32,24 @@ class ClipboardManager {
 
     private func checkClipboard() {
         let pasteboard = NSPasteboard.general
-
-        if pasteboard.changeCount != lastChangeCount {
+        
+        // Check if the change count has changed
+        let changeCountChanged = pasteboard.changeCount != lastChangeCount
+        if changeCountChanged {
             lastChangeCount = pasteboard.changeCount
-
-            if let image = NSImage(pasteboard: pasteboard) {
+        }
+        
+        // Always check for image content (handles Universal Clipboard from iOS devices)
+        if let image = NSImage(pasteboard: pasteboard) {
+            // Only update if the image has changed or change count changed
+            if changeCountChanged || clipboardImage == nil || !image.dataEquals(clipboardImage) {
                 clipboardImage = image
                 hasImage = true
-            } else {
-                clipboardImage = nil
-                hasImage = false
             }
+        } else if hasImage {
+            // Only clear if we previously had an image
+            clipboardImage = nil
+            hasImage = false
         }
     }
 
