@@ -155,10 +155,9 @@ class AltTextGenerator {
   var generatedText: String?
   var error: String?
   
-  @AppStorage("customInstructions") private var customInstructions = ""
   private let apiProvider: APIProvider = .groq
 
-  func generateAltText(for image: UIImage) async {
+  func generateAltText(for image: UIImage, customInstructions: String = "") async {
     await MainActor.run {
       isGenerating = true
       error = nil
@@ -166,7 +165,7 @@ class AltTextGenerator {
     }
 
     do {
-      let altText = try await performGeneration(for: image)
+      let altText = try await performGeneration(for: image, customInstructions: customInstructions)
 
       await MainActor.run {
         generatedText = altText
@@ -180,7 +179,7 @@ class AltTextGenerator {
     }
   }
 
-  private func performGeneration(for image: UIImage) async throws -> String {
+  private func performGeneration(for image: UIImage, customInstructions: String = "") async throws -> String {
     guard let apiKey = KeychainManager.shared.getAPIKey(for: apiProvider) else {
       throw AltTextError.missingAPIKey
     }

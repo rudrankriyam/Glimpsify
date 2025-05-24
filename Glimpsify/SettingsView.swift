@@ -12,7 +12,6 @@ struct SettingsView: View {
   @AppStorage("apiProvider") private var apiProvider: APIProvider = .groq
   @AppStorage("maxCharacters") private var maxCharacters: Int = 1_000
   @AppStorage("autoGenerate") private var autoGenerate = false
-  @AppStorage("customInstructions") private var customInstructions = ""
 
   @State private var apiKey: String = ""
   @State private var showingAPIKeyAlert = false
@@ -78,13 +77,6 @@ struct SettingsView: View {
             .frame(width: 80)
         }
 
-        VStack(alignment: .leading, spacing: 8) {
-          Text("Custom Instructions")
-          
-          TextField("Add your custom instructions here", text: $customInstructions, axis: .vertical)
-            .textFieldStyle(.roundedBorder)
-            .lineLimit(3...5)
-        }
 
         Toggle("Auto-generate on image copy", isOn: $autoGenerate)
       }

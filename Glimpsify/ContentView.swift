@@ -12,6 +12,7 @@ struct ContentView: View {
   @Environment(AltTextGenerator.self) private var altTextGenerator
   @Environment(\.openSettings) private var openSettings
   @AppStorage("apiProvider") private var apiProvider: APIProvider = .groq
+  @State private var customInstructions: String = ""
 
   var body: some View {
     VStack(spacing: 16) {
@@ -81,6 +82,10 @@ struct ContentView: View {
           .font(.subheadline)
         Spacer()
       }
+      
+      TextField("Custom instructions (optional)", text: $customInstructions)
+        .textFieldStyle(RoundedBorderTextFieldStyle())
+        .font(.caption)
 
       Button {
         Task {
@@ -206,7 +211,7 @@ struct ContentView: View {
 
   private func generateAltText() async {
     guard let image = clipboardManager.clipboardImage else { return }
-    await altTextGenerator.generateAltText(for: image)
+    await altTextGenerator.generateAltText(for: image, customInstructions: customInstructions)
   }
 }
 

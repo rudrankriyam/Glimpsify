@@ -215,11 +215,10 @@ class AltTextGenerator {
   var generatedText: String?
   var error: String?
   
-  @AppStorage("customInstructions") private var customInstructions = ""
   private let keychainManager = KeychainManager.shared
 
   @MainActor
-  func generateAltText(for image: NSImage) async {
+  func generateAltText(for image: NSImage, customInstructions: String = "") async {
     isGenerating = true
     error = nil
 
@@ -228,7 +227,7 @@ class AltTextGenerator {
         throw AltTextError.invalidResponse
       }
 
-      let altText = try await callGroqAPI(base64Image: base64Image)
+      let altText = try await callGroqAPI(base64Image: base64Image, customInstructions: customInstructions)
       generatedText = altText
       isGenerating = false
     } catch {
@@ -243,7 +242,7 @@ class AltTextGenerator {
     error = nil
   }
 
-  private func callGroqAPI(base64Image: String) async throws -> String {
+  private func callGroqAPI(base64Image: String, customInstructions: String) async throws -> String {
     guard let apiKey = keychainManager.getAPIKey(for: .groq) else {
       throw AltTextError.missingAPIKey
     }
