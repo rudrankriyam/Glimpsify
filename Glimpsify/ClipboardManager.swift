@@ -42,7 +42,7 @@ class ClipboardManager {
         // Always check for image content (handles Universal Clipboard from iOS devices)
         if let image = NSImage(pasteboard: pasteboard) {
             // Only update if the image has changed or change count changed
-            if changeCountChanged || clipboardImage == nil || !image.isEqual(clipboardImage) {
+            if changeCountChanged || clipboardImage == nil || !image.dataEquals(clipboardImage) {
                 clipboardImage = image
                 hasImage = true
             }

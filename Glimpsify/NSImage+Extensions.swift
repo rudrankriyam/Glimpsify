@@ -43,7 +43,7 @@ extension NSImage {
     }
     
     // Compare two NSImages for equality based on their data representation
-    func isEqual(_ other: NSImage?) -> Bool {
+    func dataEquals(_ other: NSImage?) -> Bool {
         guard let other = other else { return false }
         
         // Quick size comparison first (optimization)

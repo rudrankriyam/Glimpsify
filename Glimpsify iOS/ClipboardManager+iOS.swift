@@ -40,10 +40,10 @@ class ClipboardManager {
     }
     
     // Always check for image content (handles Universal Clipboard from macOS devices)
-    if pasteboard.contains(pasteboardTypes: [UTType.image.identifier]) {
+    if pasteboard.hasImages {
       if let image = pasteboard.image {
         // Only update if the image has changed or change count changed
-        if changeCountChanged || clipboardImage == nil || !clipboardImage!.isEqual(image) {
+        if changeCountChanged || clipboardImage == nil || !clipboardImage!.hasSameImageData(as: image) {
           clipboardImage = image
           hasImage = true
         }

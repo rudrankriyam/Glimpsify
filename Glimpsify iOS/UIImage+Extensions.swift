@@ -9,7 +9,7 @@ import UIKit
 
 extension UIImage {
     // Compare two UIImages for equality based on their data representation
-    func isEqual(_ other: UIImage?) -> Bool {
+    func hasSameImageData(as other: UIImage?) -> Bool {
         guard let other = other else { return false }
         
         // Quick size comparison first (optimization)
