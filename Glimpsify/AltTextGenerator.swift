@@ -214,7 +214,8 @@ class AltTextGenerator {
   var isGenerating = false
   var generatedText: String?
   var error: String?
-
+  
+  @AppStorage("customInstructions") private var customInstructions = ""
   private let keychainManager = KeychainManager.shared
 
   @MainActor
@@ -264,8 +265,8 @@ class AltTextGenerator {
                 - Colors, composition, or mood if significant
 
                 Be specific but concise. Avoid starting with "This image shows" or similar phrases.
-
-                IMPORTANT: Return only the alt text without any quotes, formatting, or additional text.
+                
+                \(customInstructions.isEmpty ? "" : "Additional instructions:\n\(customInstructions)\n\n")IMPORTANT: Return only the alt text without any quotes, formatting, or additional text.
                 """,
               imageUrl: nil
             ),
