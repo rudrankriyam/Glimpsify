@@ -154,7 +154,8 @@ class AltTextGenerator {
   var isGenerating = false
   var generatedText: String?
   var error: String?
-
+  
+  @AppStorage("customInstructions") private var customInstructions = ""
   private let apiProvider: APIProvider = .groq
 
   func generateAltText(for image: UIImage) async {
@@ -202,7 +203,7 @@ class AltTextGenerator {
             GroqContent(
               type: "text",
               text:
-                "Generate a concise, descriptive alt text for this image. Focus on the main subject, important details, and context. Keep it under 1000 characters and make it accessible for screen readers.",
+                "Generate a concise, descriptive alt text for this image. Focus on the main subject, important details, and context. Keep it under 1000 characters and make it accessible for screen readers.\n\(customInstructions.isEmpty ? "" : "\n\(customInstructions)")",
               imageUrl: nil
             ),
             GroqContent(
