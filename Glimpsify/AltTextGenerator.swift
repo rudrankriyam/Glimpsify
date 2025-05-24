@@ -214,11 +214,11 @@ class AltTextGenerator {
   var isGenerating = false
   var generatedText: String?
   var error: String?
-
+  
   private let keychainManager = KeychainManager.shared
 
   @MainActor
-  func generateAltText(for image: NSImage) async {
+  func generateAltText(for image: NSImage, customInstructions: String = "") async {
     isGenerating = true
     error = nil
 
@@ -227,7 +227,7 @@ class AltTextGenerator {
         throw AltTextError.invalidResponse
       }
 
-      let altText = try await callGroqAPI(base64Image: base64Image)
+      let altText = try await callGroqAPI(base64Image: base64Image, customInstructions: customInstructions)
       generatedText = altText
       isGenerating = false
     } catch {
@@ -242,7 +242,7 @@ class AltTextGenerator {
     error = nil
   }
 
-  private func callGroqAPI(base64Image: String) async throws -> String {
+  private func callGroqAPI(base64Image: String, customInstructions: String) async throws -> String {
     guard let apiKey = keychainManager.getAPIKey(for: .groq) else {
       throw AltTextError.missingAPIKey
     }
@@ -264,8 +264,8 @@ class AltTextGenerator {
                 - Colors, composition, or mood if significant
 
                 Be specific but concise. Avoid starting with "This image shows" or similar phrases.
-
-                IMPORTANT: Return only the alt text without any quotes, formatting, or additional text.
+                
+                \(customInstructions.isEmpty ? "" : "Additional instructions:\n\(customInstructions)\n\n")IMPORTANT: Return only the alt text without any quotes, formatting, or additional text.
                 """,
               imageUrl: nil
             ),

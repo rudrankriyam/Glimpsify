@@ -77,6 +77,7 @@ struct SettingsView: View {
             .frame(width: 80)
         }
 
+
         Toggle("Auto-generate on image copy", isOn: $autoGenerate)
       }
 

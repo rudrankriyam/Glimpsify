@@ -12,6 +12,7 @@ struct ClipboardView: View {
   @Environment(ClipboardManager.self) private var clipboardManager
   @Environment(AltTextGenerator.self) private var altTextGenerator
   @State private var showingResult = false
+  @State private var customInstructions = ""
 
   var body: some View {
     ScrollView {
@@ -64,6 +65,13 @@ struct ClipboardView: View {
               .foregroundStyle(.secondary)
               .multilineTextAlignment(.center)
           }
+          
+          // Custom instructions field
+          TextField("Custom instructions (optional)", text: $customInstructions)
+            .padding()
+            .background(Color(.systemGray6))
+            .cornerRadius(10)
+            .font(.system(size: 16))
 
           // Apple-style action button
           Button(action: {
@@ -241,7 +249,7 @@ struct ClipboardView: View {
 
   private func generateAltText() async {
     guard let image = clipboardManager.clipboardImage else { return }
-    await altTextGenerator.generateAltText(for: image)
+    await altTextGenerator.generateAltText(for: image, customInstructions: customInstructions)
   }
 }
 

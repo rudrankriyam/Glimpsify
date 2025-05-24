@@ -154,10 +154,10 @@ class AltTextGenerator {
   var isGenerating = false
   var generatedText: String?
   var error: String?
-
+  
   private let apiProvider: APIProvider = .groq
 
-  func generateAltText(for image: UIImage) async {
+  func generateAltText(for image: UIImage, customInstructions: String = "") async {
     await MainActor.run {
       isGenerating = true
       error = nil
@@ -165,7 +165,7 @@ class AltTextGenerator {
     }
 
     do {
-      let altText = try await performGeneration(for: image)
+      let altText = try await performGeneration(for: image, customInstructions: customInstructions)
 
       await MainActor.run {
         generatedText = altText
@@ -179,7 +179,7 @@ class AltTextGenerator {
     }
   }
 
-  private func performGeneration(for image: UIImage) async throws -> String {
+  private func performGeneration(for image: UIImage, customInstructions: String = "") async throws -> String {
     guard let apiKey = KeychainManager.shared.getAPIKey(for: apiProvider) else {
       throw AltTextError.missingAPIKey
     }
@@ -202,7 +202,7 @@ class AltTextGenerator {
             GroqContent(
               type: "text",
               text:
-                "Generate a concise, descriptive alt text for this image. Focus on the main subject, important details, and context. Keep it under 1000 characters and make it accessible for screen readers.",
+                "Generate a concise, descriptive alt text for this image. Focus on the main subject, important details, and context. Keep it under 1000 characters and make it accessible for screen readers.\n\(customInstructions.isEmpty ? "" : "\n\(customInstructions)")",
               imageUrl: nil
             ),
             GroqContent(
