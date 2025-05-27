@@ -188,6 +188,7 @@ struct AltTextResultView: View {
   @Environment(\.dismiss) private var dismiss
   @State private var isGenerating = false
   @State private var generatedText = ""
+  @State private var twitterManager = TwitterIntentManager()
 
   var body: some View {
     NavigationView {
@@ -234,12 +235,13 @@ struct AltTextResultView: View {
                   .background(.quaternary, in: RoundedRectangle(cornerRadius: 12))
                   .textSelection(.enabled)
 
-                HStack(spacing: 12) {
-                  Button(action: shareText) {
+                VStack(spacing: 12) {
+                  // Twitter share button
+                  Button(action: shareToTwitter) {
                     HStack(spacing: 6) {
-                      Image(systemName: "square.and.arrow.up")
+                      Image(systemName: "bird")
                         .font(.system(size: 15, weight: .medium))
-                      Text("Share")
+                      Text("Share on Twitter")
                         .font(.system(size: 16, weight: .semibold))
                     }
                     .frame(maxWidth: .infinity)
@@ -248,19 +250,35 @@ struct AltTextResultView: View {
                     .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                   }
-
-                  Button(action: copyText) {
-                    HStack(spacing: 6) {
-                      Image(systemName: "doc.on.clipboard")
-                        .font(.system(size: 15, weight: .medium))
-                      Text("Copy")
-                        .font(.system(size: 16, weight: .semibold))
+                  
+                  HStack(spacing: 12) {
+                    Button(action: shareText) {
+                      HStack(spacing: 6) {
+                        Image(systemName: "square.and.arrow.up")
+                          .font(.system(size: 15, weight: .medium))
+                        Text("Share")
+                          .font(.system(size: 16, weight: .semibold))
+                      }
+                      .frame(maxWidth: .infinity)
+                      .frame(height: 44)
+                      .background(.secondary.opacity(0.2))
+                      .foregroundStyle(.primary)
+                      .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .background(.quaternary)
-                    .foregroundStyle(.secondary)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                    Button(action: copyText) {
+                      HStack(spacing: 6) {
+                        Image(systemName: "doc.on.clipboard")
+                          .font(.system(size: 15, weight: .medium))
+                        Text("Copy")
+                          .font(.system(size: 16, weight: .semibold))
+                      }
+                      .frame(maxWidth: .infinity)
+                      .frame(height: 44)
+                      .background(.quaternary)
+                      .foregroundStyle(.secondary)
+                      .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
                   }
                 }
               }
@@ -342,6 +360,19 @@ struct AltTextResultView: View {
     if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
       let window = windowScene.windows.first {
       window.rootViewController?.present(activityController, animated: true)
+    }
+  }
+  
+  private func shareToTwitter() {
+    let hapticFeedback = UIImpactFeedbackGenerator(style: .light)
+    hapticFeedback.impactOccurred()
+    
+    // Create tweet text with hashtags
+    let tweetText = "\(generatedText)\n\n#Accessibility #AltText #InclusiveDesign"
+    
+    // Share both image and text using modern async/await
+    Task {
+      await twitterManager.shareToTwitter(text: tweetText, image: image)
     }
   }
 }

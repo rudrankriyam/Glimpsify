@@ -13,6 +13,7 @@ struct ClipboardView: View {
   @Environment(AltTextGenerator.self) private var altTextGenerator
   @State private var showingResult = false
   @State private var customInstructions = ""
+  @State private var twitterManager = TwitterIntentManager()
 
   var body: some View {
     ScrollView {
@@ -171,16 +172,15 @@ struct ClipboardView: View {
         .background(.quaternary, in: RoundedRectangle(cornerRadius: 12))
 
       // Actions
-      HStack(spacing: 12) {
+      VStack(spacing: 12) {
+        // Twitter share button
         Button(action: {
-          UIPasteboard.general.string = altText
-          let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-          impactFeedback.impactOccurred()
+          shareToTwitter(altText)
         }) {
           HStack(spacing: 6) {
-            Image(systemName: "doc.on.clipboard")
+            Image(systemName: "bird")
               .font(.system(size: 15, weight: .medium))
-            Text("Copy")
+            Text("Share on Twitter")
               .font(.system(size: 16, weight: .semibold))
           }
           .frame(maxWidth: .infinity)
@@ -189,21 +189,41 @@ struct ClipboardView: View {
           .foregroundStyle(.white)
           .clipShape(RoundedRectangle(cornerRadius: 10))
         }
-
-        Button(action: {
-          altTextGenerator.clearText()
-        }) {
-          HStack(spacing: 6) {
-            Image(systemName: "arrow.clockwise")
-              .font(.system(size: 15, weight: .medium))
-            Text("Clear")
-              .font(.system(size: 16, weight: .semibold))
+        
+        HStack(spacing: 12) {
+          Button(action: {
+            UIPasteboard.general.string = altText
+            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+            impactFeedback.impactOccurred()
+          }) {
+            HStack(spacing: 6) {
+              Image(systemName: "doc.on.clipboard")
+                .font(.system(size: 15, weight: .medium))
+              Text("Copy")
+                .font(.system(size: 16, weight: .semibold))
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 44)
+            .background(.secondary.opacity(0.2))
+            .foregroundStyle(.primary)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
           }
-          .frame(maxWidth: .infinity)
-          .frame(height: 44)
-          .background(.quaternary)
-          .foregroundStyle(.secondary)
-          .clipShape(RoundedRectangle(cornerRadius: 10))
+
+          Button(action: {
+            altTextGenerator.clearText()
+          }) {
+            HStack(spacing: 6) {
+              Image(systemName: "arrow.clockwise")
+                .font(.system(size: 15, weight: .medium))
+              Text("Clear")
+                .font(.system(size: 16, weight: .semibold))
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 44)
+            .background(.quaternary)
+            .foregroundStyle(.secondary)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+          }
         }
       }
     }
@@ -250,6 +270,24 @@ struct ClipboardView: View {
   private func generateAltText() async {
     guard let image = clipboardManager.clipboardImage else { return }
     await altTextGenerator.generateAltText(for: image, customInstructions: customInstructions)
+  }
+  
+  private func shareToTwitter(_ altText: String) {
+    let hapticFeedback = UIImpactFeedbackGenerator(style: .light)
+    hapticFeedback.impactOccurred()
+    
+    // Create tweet text with hashtags
+    let tweetText = "\(altText)\n\n#Accessibility #AltText #InclusiveDesign"
+    
+    // Share both image and text if image is available using modern async/await
+    Task {
+      if let image = clipboardManager.clipboardImage {
+        await twitterManager.shareToTwitter(text: tweetText, image: image)
+      } else {
+        // Share just text if no image
+        await twitterManager.shareTextToTwitter(text: tweetText)
+      }
+    }
   }
 }
 
