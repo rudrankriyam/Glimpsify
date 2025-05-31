@@ -30,7 +30,7 @@ class ClipboardManager {
         }
     }
 
-    private func checkClipboard() {
+    func checkClipboard() {
         let pasteboard = NSPasteboard.general
         
         // Check if the change count has changed

@@ -70,6 +70,9 @@ struct ContentView: View {
     }
     .padding()
     .frame(width: 320, height: 320)
+    .onAppear {
+      clipboardManager.checkClipboard()
+    }
   }
 
   @ViewBuilder
