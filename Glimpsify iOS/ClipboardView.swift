@@ -39,6 +39,9 @@ struct ClipboardView: View {
     .refreshable {
       clipboardManager.checkClipboard()
     }
+    .onAppear {
+      clipboardManager.checkClipboard()
+    }
   }
 
   private var imageReadyCard: some View {
