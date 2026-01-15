@@ -1,4 +1,6 @@
 # Glimpsify
+[![Star History Chart](https://api.star-history.com/svg?repos=rudrankriyam/Glimpsify&type=Date)](https://star-history.com/#rudrankriyam/Glimpsify&Date)
+
 
 A cross-platform app that generates descriptive alt text for images using AI! Available for both macOS and iOS.
 
